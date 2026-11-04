@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "oci-compute": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--python", "3.13", "oracle.oci-compute-mcp-server@latest"],
+      "env": { "OCI_CONFIG_PROFILE": "DEFAULT", "FASTMCP_LOG_LEVEL": "ERROR" }
+    },
+    "oci-networking": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--python", "3.13", "oracle.oci-networking-mcp-server@latest"],
+      "env": { "OCI_CONFIG_PROFILE": "DEFAULT", "FASTMCP_LOG_LEVEL": "ERROR" }
+    },
+    "oci-monitoring": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--python", "3.13", "oracle.oci-monitoring-mcp-server@latest"],
+      "env": { "OCI_CONFIG_PROFILE": "DEFAULT", "FASTMCP_LOG_LEVEL": "ERROR" }
+    },
+    "oci-usage": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--python", "3.13", "oracle.oci-usage-mcp-server@latest"],
+      "env": { "OCI_CONFIG_PROFILE": "DEFAULT", "FASTMCP_LOG_LEVEL": "ERROR" }
+    },
+    "oci-cloud": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["--python", "3.13", "oracle.oci-cloud-mcp-server@latest"],
+      "env": { "OCI_CONFIG_PROFILE": "DEFAULT", "OCI_MCP_AUTH_TYPE": "api_key", "FASTMCP_LOG_LEVEL": "ERROR" }
+    }
+  }
+}

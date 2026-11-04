@@ -1,0 +1,7 @@
+# Inbound on top of the always-on rules (established, icmp, lo, tailscale0).
+# Keep in sync with nsg-edge / the public security list in infra/terraform.
+firewall_public_tcp: [22]  # break-glass SSH; Caddy adds 80/443 in Phase 3
+firewall_allow_from:
+  - {src: 10.0.1.0/24, port: 9100}  # worker's Prometheus -> node exporter
+tailscale_advertise_routes: [10.0.0.0/16]
+tailscale_exit_node: true

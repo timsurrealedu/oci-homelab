@@ -1,0 +1,38 @@
+- name: SSH hardening drop-in (sorts before the cloud image's 60-cloudimg-settings.conf; first value wins)
+  ansible.builtin.template:
+    src: 10-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/10-hardening.conf
+    mode: "0644"
+  notify: Reload sshd
+
+- name: Validate sshd config
+  ansible.builtin.command: /usr/sbin/sshd -t
+  changed_when: false
+  check_mode: false
+
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+
+- name: Configure fail2ban sshd jail (never ban the tailnet or the VCN)
+  ansible.builtin.copy:
+    dest: /etc/fail2ban/jail.d/sshd.local
+    content: |
+      [DEFAULT]
+      ignoreip = 127.0.0.1/8 ::1 100.64.0.0/10 10.0.0.0/16
+      bantime = 1h
+      findtime = 10m
+      maxretry = 5
+
+      [sshd]
+      enabled = true
+    mode: "0644"
+  notify: Restart fail2ban
+
+- name: Start fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true
+  ignore_errors: "{{ ansible_check_mode }}"

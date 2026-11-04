@@ -1,0 +1,10 @@
+#cloud-config
+# Minimal bootstrap; everything else is Ansible (infra/ansible).
+hostname: worker
+package_update: true
+packages: [curl]
+runcmd:
+  - [sh, -c, "curl -fsSL https://tailscale.com/install.sh | sh"]
+%{ if ts_authkey != "" ~}
+  - [tailscale, up, "--authkey=${ts_authkey}", "--hostname=worker"]
+%{ endif ~}

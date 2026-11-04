@@ -1,0 +1,48 @@
+// Tailscale policy for the oci-homelab tailnet. Replace you@example.com with your login before applying.
+// DRAFT: applying it is a user step (admin console → Access controls → paste, or an API token).
+// Default deny: anything not listed below is blocked.
+{
+	"groups": {
+		"group:admins": ["you@example.com"],
+	},
+
+	// Servers are tagged, so they stop being "Tim's devices" and lose access to them.
+	// After applying: admin console → Machines → instance-20260702-1842 → Edit ACL tags → tag:edge
+	// (worker: tag:worker, or join it with a tag:worker auth key). Tagging also disables key expiry.
+	"tagOwners": {
+		"tag:edge":   ["group:admins"],
+		"tag:worker": ["group:admins"],
+		"tag:render": ["group:admins"], // optional home GPU node for stewie
+	},
+
+	// Lets the edge's subnet route and exit node go live without a manual approval click.
+	"autoApprovers": {
+		"routes":   {"10.0.0.0/16": ["tag:edge"]},
+		"exitNode": ["tag:edge"],
+	},
+
+	"acls": [
+		// Tim's own devices (laptops, phone) reach each other and every server port: admin UIs
+		// (Coolify, Grafana, Syncthing GUI, Jupyter...) are only reachable this way.
+		{"action": "accept", "src": ["group:admins"], "dst": ["group:admins:*", "tag:edge:*", "tag:worker:*", "tag:render:*"]},
+		// The VCN through the edge's subnet route (worker private IP, OCI metadata stays unreachable).
+		{"action": "accept", "src": ["group:admins"], "dst": ["10.0.0.0/16:*"]},
+		// Exit node on the edge (browse from Batam).
+		{"action": "accept", "src": ["group:admins"], "dst": ["autogroup:internet:*"]},
+
+		// Edge → worker: Ansible SSH, Caddy → app proxy, metrics. Mirrors nsg-worker.
+		{"action": "accept", "src": ["tag:edge"], "dst": ["tag:worker:22,80,443,9100"]},
+		// Worker → edge: Prometheus scrapes node exporter.
+		{"action": "accept", "src": ["tag:worker"], "dst": ["tag:edge:9100"]},
+		// Worker → home GPU render node (stewie). Port is the render API; adjust when it exists.
+		{"action": "accept", "src": ["tag:worker"], "dst": ["tag:render:8188"]},
+	],
+
+	// Policy tests: the admin console refuses to save the policy if any of these fail.
+	"tests": [
+		{"src": "you@example.com", "accept": ["tag:edge:22", "tag:worker:22", "10.0.1.10:22"]},
+		{"src": "tag:edge", "accept": ["tag:worker:22", "tag:worker:443"], "deny": ["tag:worker:5432", "you@example.com:22"]},
+		{"src": "tag:worker", "accept": ["tag:edge:9100"], "deny": ["tag:edge:22", "you@example.com:22"]},
+		{"src": "tag:render", "deny": ["tag:worker:22", "tag:edge:22"]},
+	],
+}

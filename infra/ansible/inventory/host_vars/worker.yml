@@ -1,0 +1,9 @@
+# Keep in sync with nsg-worker in infra/terraform: only the edge gets in.
+firewall_public_tcp: []
+firewall_allow_from:
+  - {src: 10.0.0.0/24, port: 22}
+  - {src: 10.0.0.0/24, port: 80}
+  - {src: 10.0.0.0/24, port: 443}
+  - {src: 10.0.0.0/24, port: 9100}
+tailscale_advertise_routes: []
+tailscale_exit_node: false

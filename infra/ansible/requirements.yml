@@ -1,0 +1,5 @@
+collections:
+  - name: ansible.posix
+    version: ">=1.6,<3"
+  - name: community.general
+    version: ">=9,<12"

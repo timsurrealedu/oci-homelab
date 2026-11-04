@@ -1,0 +1,49 @@
+# Installs Tailscale and sets routing prefs. Joining the tailnet (auth key / login) and approving
+# advertised routes are user steps in the admin console unless policy.hujson autoApprovers cover them.
+- name: Is Tailscale installed
+  ansible.builtin.stat:
+    path: /usr/bin/tailscale
+  register: tailscale_bin
+
+- name: Install Tailscale (official script, adds the apt repo)
+  ansible.builtin.shell: set -o pipefail && curl -fsSL https://tailscale.com/install.sh | sh
+  args:
+    executable: /bin/bash
+  when: not tailscale_bin.stat.exists
+  changed_when: true
+
+- name: IP forwarding for subnet router / exit node
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: "1"
+    sysctl_file: /etc/sysctl.d/99-tailscale.conf
+  loop: [net.ipv4.ip_forward, net.ipv6.conf.all.forwarding]
+  when: tailscale_advertise_routes | length > 0 or tailscale_exit_node
+
+- name: Read Tailscale prefs
+  ansible.builtin.command: tailscale debug prefs
+  register: tailscale_prefs
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Read Tailscale state
+  ansible.builtin.command: tailscale status --json --peers=false
+  register: tailscale_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Advertise routes / exit node
+  vars:
+    prefs: "{{ tailscale_prefs.stdout | from_json }}"
+    want_routes: "{{ (tailscale_advertise_routes + (['0.0.0.0/0', '::/0'] if tailscale_exit_node else [])) | sort }}"
+  ansible.builtin.command: >-
+    tailscale set
+    --advertise-routes={{ tailscale_advertise_routes | join(',') }}
+    --advertise-exit-node={{ tailscale_exit_node | lower }}
+  when:
+    - tailscale_status.rc == 0
+    - (tailscale_status.stdout | from_json).BackendState == 'Running'
+    - (prefs.AdvertiseRoutes | default([]) or []) | sort != want_routes
+  changed_when: true

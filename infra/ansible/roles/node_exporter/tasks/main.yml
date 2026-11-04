@@ -1,0 +1,66 @@
+# Official release binary (Ubuntu 20.04's package is years old). Listens on :9100; the host firewall
+# and NSGs only let the worker subnet and the tailnet reach it.
+- name: Create node_exporter user
+  ansible.builtin.user:
+    name: node_exporter
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Installed node_exporter version
+  ansible.builtin.stat:
+    path: /usr/local/lib/node_exporter-{{ node_exporter_version }}.installed
+  register: node_exporter_marker
+
+- name: Install node_exporter release (checksum-verified)
+  when: not node_exporter_marker.stat.exists
+  notify: Restart node_exporter
+  block:
+    - name: Download release
+      ansible.builtin.get_url:
+        url: "{{ node_exporter_url }}/node_exporter-{{ node_exporter_version }}.linux-arm64.tar.gz"
+        checksum: "sha256:{{ node_exporter_url }}/sha256sums.txt"
+        dest: /tmp/node_exporter.tar.gz
+        mode: "0644"
+
+    - name: Unpack binary
+      ansible.builtin.unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /usr/local/bin
+        remote_src: true
+        extra_opts: [--strip-components=1, --wildcards, "*/node_exporter"]
+
+    - name: Mark version installed
+      ansible.builtin.copy:
+        dest: /usr/local/lib/node_exporter-{{ node_exporter_version }}.installed
+        content: "{{ node_exporter_version }}\n"
+        mode: "0644"
+
+- name: Install node_exporter unit
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/node_exporter.service
+    content: |
+      [Unit]
+      Description=Prometheus node exporter
+      After=network-online.target
+
+      [Service]
+      User=node_exporter
+      ExecStart=/usr/local/bin/node_exporter --web.listen-address=:9100 --collector.systemd
+      Restart=on-failure
+      NoNewPrivileges=true
+      ProtectSystem=strict
+      ProtectHome=read-only
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: "0644"
+  notify: Restart node_exporter
+
+- name: Start node_exporter
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: started
+    enabled: true
+    daemon_reload: true
+  ignore_errors: "{{ ansible_check_mode }}"

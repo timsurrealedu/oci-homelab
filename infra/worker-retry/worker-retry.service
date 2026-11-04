@@ -1,0 +1,8 @@
+[Unit]
+Description=oci-homelab: retry launching the worker instance
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/oci-homelab/worker-retry/retry-worker.sh

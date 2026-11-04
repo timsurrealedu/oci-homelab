@@ -1,0 +1,13 @@
+monitoring_dir: /opt/oci-homelab/monitoring
+monitoring_retention: 30d
+monitoring_versions:
+  prometheus: v3.5.0
+  alertmanager: v0.28.1
+  grafana: 12.0.2
+  uptime_kuma: 1.23.16
+monitoring_node_dashboard_rev: 41
+monitoring_ts_host: instance-20260702-1842.tail3548c0.ts.net
+monitoring_ts_url: https://{{ monitoring_ts_host }}
+monitoring_ui_ports: {grafana: 3000, uptime-kuma: 3002, prometheus: 9090, alertmanager: 9093}
+# host:port of node exporters to scrape; add the worker (10.0.1.10:9100) once it exists
+monitoring_node_targets: [{target: 127.0.0.1:9100, name: edge}]

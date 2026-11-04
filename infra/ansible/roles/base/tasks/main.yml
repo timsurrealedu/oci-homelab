@@ -1,0 +1,61 @@
+- name: Baseline packages
+  ansible.builtin.apt:
+    name: [unattended-upgrades, apt-listchanges, iptables-persistent, curl, htop, jq]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Unattended security upgrades (no automatic reboot)
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+      APT::Periodic::AutocleanInterval "7";
+    mode: "0644"
+
+- name: Time sync config dir
+  ansible.builtin.file:
+    path: /etc/systemd/timesyncd.conf.d
+    state: directory
+    mode: "0755"
+
+- name: Time sync against the OCI metadata NTP server
+  ansible.builtin.copy:
+    dest: /etc/systemd/timesyncd.conf.d/oci.conf
+    content: |
+      [Time]
+      NTP=169.254.169.254
+    mode: "0644"
+  notify: Restart timesyncd
+
+- name: Swap file
+  ansible.builtin.shell: fallocate -l {{ base_swap_size }} /swapfile && chmod 600 /swapfile && mkswap /swapfile
+  args:
+    creates: /swapfile
+
+- name: Swap in fstab
+  ansible.posix.mount:
+    src: /swapfile
+    path: none
+    fstype: swap
+    opts: sw
+    state: present
+
+- name: Swap active
+  ansible.builtin.command: swapon --show=NAME --noheadings
+  register: base_swap_active
+  changed_when: false
+  check_mode: false
+
+- name: Enable swap
+  ansible.builtin.command: swapon /swapfile
+  when: "'/swapfile' not in base_swap_active.stdout"
+  changed_when: true
+
+- name: Kernel tuning
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-oci-homelab.conf
+  loop: "{{ base_sysctl | dict2items }}"

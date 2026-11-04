@@ -1,0 +1,7 @@
+#cloud-config
+# Minimal bootstrap; everything else is Ansible (infra/ansible).
+hostname: worker
+package_update: true
+packages: [curl]
+runcmd:
+  - [sh, -c, "curl -fsSL https://tailscale.com/install.sh | sh"]

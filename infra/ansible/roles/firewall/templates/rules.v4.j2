@@ -1,0 +1,33 @@
+# Managed by Ansible (infra/ansible/roles/firewall). Loaded at boot by netfilter-persistent,
+# before Docker and Tailscale add their own chains. The InstanceServices chain is Oracle's, unchanged.
+*filter
+:INPUT ACCEPT [0:0]
+:FORWARD ACCEPT [0:0]
+:OUTPUT ACCEPT [0:0]
+:InstanceServices - [0:0]
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p icmp -j ACCEPT
+-A INPUT -i lo -j ACCEPT
+{% for r in firewall_rules %}
+-A INPUT{% if r.iface is defined %} -i {{ r.iface }}{% endif %}{% if r.src is defined %} -s {{ r.src }}{% endif %}{% if r.port is defined %} -p tcp -m conntrack --ctstate NEW -m tcp --dport {{ r.port }}{% endif %} -m comment --comment "{{ r.comment }}" -j ACCEPT
+{% endfor %}
+-A INPUT -j REJECT --reject-with icmp-host-prohibited
+-A FORWARD -j REJECT --reject-with icmp-host-prohibited
+-A OUTPUT -d 169.254.0.0/16 -j InstanceServices
+{% set c = '-m comment --comment "See the Oracle-Provided Images section in the Oracle Cloud Infrastructure documentation for security impact of modifying or removing this rule"' %}
+-A InstanceServices -d 169.254.0.2/32 -p tcp -m owner --uid-owner 0 -m tcp --dport 3260 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.2.0/24 -p tcp -m owner --uid-owner 0 -m tcp --dport 3260 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.4.0/24 -p tcp -m owner --uid-owner 0 -m tcp --dport 3260 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.5.0/24 -p tcp -m owner --uid-owner 0 -m tcp --dport 3260 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.0.2/32 -p tcp -m tcp --dport 80 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.169.254/32 -p udp -m udp --dport 53 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.169.254/32 -p tcp -m tcp --dport 53 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.0.3/32 -p tcp -m owner --uid-owner 0 -m tcp --dport 80 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.0.4/32 -p tcp -m tcp --dport 80 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.169.254/32 -p tcp -m tcp --dport 80 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.169.254/32 -p udp -m udp --dport 67 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.169.254/32 -p udp -m udp --dport 69 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.169.254/32 -p udp --dport 123 {{ c }} -j ACCEPT
+-A InstanceServices -d 169.254.0.0/16 -p tcp -m tcp {{ c }} -j REJECT --reject-with tcp-reset
+-A InstanceServices -d 169.254.0.0/16 -p udp -m udp {{ c }} -j REJECT --reject-with icmp-port-unreachable
+COMMIT

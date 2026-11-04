@@ -1,0 +1,100 @@
+# Prometheus + Alertmanager (Telegram) + Grafana + Uptime Kuma as one compose project.
+# Secrets never live in the repo: the Telegram bot comes from /etc/oci-homelab/telegram.env
+# (created when the bot was set up) and the Grafana admin password is generated on the host.
+- name: Create stack directories
+  ansible.builtin.file:
+    path: "{{ monitoring_dir }}/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: [prometheus, alertmanager, grafana/provisioning/datasources, grafana/provisioning/dashboards, grafana/dashboards]
+
+- name: Create secrets directory
+  ansible.builtin.file:
+    path: /etc/oci-homelab/secrets
+    state: directory
+    mode: "0711"
+
+- name: Read Telegram bot settings
+  ansible.builtin.slurp:
+    src: /etc/oci-homelab/telegram.env
+  register: monitoring_telegram_env
+  no_log: true
+
+- name: Parse Telegram bot settings
+  ansible.builtin.set_fact:
+    monitoring_telegram: "{{ dict((monitoring_telegram_env.content | b64decode).splitlines() | select('search', '=') | map('split', '=', 1)) }}"
+  no_log: true
+
+- name: Write bot token for Alertmanager (container user nobody reads it via group)
+  ansible.builtin.copy:
+    dest: /etc/oci-homelab/secrets/telegram_bot_token
+    content: "{{ monitoring_telegram.TELEGRAM_BOT_TOKEN }}"
+    owner: root
+    group: "65534"
+    mode: "0640"
+  no_log: true
+  notify: Restart alertmanager
+
+- name: Generate Grafana admin password once (owned by the Grafana container user, uid 472)
+  ansible.builtin.shell: |
+    set -o pipefail
+    f=/etc/oci-homelab/secrets/grafana_admin_password
+    umask 077 && openssl rand -base64 24 | tr -d '\n' > "$f" && chown 472 "$f" && chmod 0400 "$f"
+  args:
+    executable: /bin/bash
+    creates: /etc/oci-homelab/secrets/grafana_admin_password
+
+- name: Render compose file and configs
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ monitoring_dir }}/{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - {src: compose.yml.j2, dest: compose.yml, svc: all}
+    - {src: prometheus.yml.j2, dest: prometheus/prometheus.yml, svc: prometheus}
+    - {src: alertmanager.yml.j2, dest: alertmanager/alertmanager.yml, svc: alertmanager}
+  loop_control:
+    label: "{{ item.dest }}"
+  notify: "Restart {{ item.svc }}"
+
+- name: Copy alert rules and Grafana provisioning
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ monitoring_dir }}/{{ item.dest }}"
+    mode: "0644"
+  loop:
+    - {src: rules.yml, dest: prometheus/rules.yml, svc: prometheus}
+    - {src: datasource.yml, dest: grafana/provisioning/datasources/prometheus.yml, svc: grafana}
+    - {src: dashboards.yml, dest: grafana/provisioning/dashboards/default.yml, svc: grafana}
+    - {src: reclamation.json, dest: grafana/dashboards/reclamation.json, svc: none}
+  loop_control:
+    label: "{{ item.dest }}"
+  notify: "Restart {{ item.svc }}"
+
+- name: Download Node Exporter Full dashboard (grafana.com 1860)
+  ansible.builtin.get_url:
+    url: https://grafana.com/api/dashboards/1860/revisions/{{ monitoring_node_dashboard_rev }}/download
+    dest: "{{ monitoring_dir }}/grafana/dashboards/node-exporter-full.json"
+    mode: "0644"
+
+- name: Start the stack
+  ansible.builtin.command: docker compose up -d --remove-orphans
+  args:
+    chdir: "{{ monitoring_dir }}"
+  register: monitoring_up
+  changed_when: monitoring_up.stderr is search('Creat|Recreat|Start')
+
+- name: Read Tailscale Serve config
+  ansible.builtin.command: tailscale serve status --json
+  register: monitoring_serve
+  changed_when: false
+  check_mode: false
+
+- name: Publish UIs on the tailnet only (Tailscale Serve, HTTPS)
+  ansible.builtin.command: tailscale serve --bg --https={{ item.value }} http://127.0.0.1:{{ item.value }}
+  loop: "{{ monitoring_ui_ports | dict2items }}"
+  loop_control:
+    label: "{{ item.key }} :{{ item.value }}"
+  when: >-
+    ((monitoring_serve.stdout | from_json).Web | default({}))[monitoring_ts_host ~ ':' ~ item.value] is not defined
+  changed_when: true

@@ -1,0 +1,46 @@
+groups:
+  - name: utilization
+    rules:
+      - record: node:memory_used:ratio
+        expr: 1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes
+      - record: node:cpu_used:ratio
+        expr: 1 - avg by (instance, node) (rate(node_cpu_seconds_total{mode="idle"}[5m]))
+      - record: node:network_bytes:rate5m
+        expr: >-
+          sum by (instance, node) (
+            rate(node_network_receive_bytes_total{device!~"lo|docker.*|veth.*|br-.*|tailscale.*"}[5m])
+            + rate(node_network_transmit_bytes_total{device!~"lo|docker.*|veth.*|br-.*|tailscale.*"}[5m]))
+
+  - name: alerts
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: "{{ $labels.job }} on {{ $labels.instance }} has been down for 5 minutes"
+
+      # Oracle reclaims an Always Free instance when CPU, network AND memory p95 stay under 20% for 7 days.
+      # Warn at 3 days so there's time to react. Network never gets near 20% of the NIC, so watch CPU + memory.
+      - alert: ReclamationRisk
+        expr: >-
+          quantile_over_time(0.95, node:memory_used:ratio[3d]) < 0.20
+          and on (instance) quantile_over_time(0.95, node:cpu_used:ratio[3d]) < 0.20
+        for: 1h
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.node }}: 3-day p95 memory and CPU are both under 20% (Oracle reclaims at 7 days)"
+
+      - alert: DiskAlmostFull
+        expr: 1 - node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} > 0.85
+        for: 15m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.node }}: root disk {{ $value | humanizePercentage }} full"
+
+      - alert: MemoryPressure
+        expr: node:memory_used:ratio > 0.90
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: "{{ $labels.node }}: memory {{ $value | humanizePercentage }} used for 10 minutes"

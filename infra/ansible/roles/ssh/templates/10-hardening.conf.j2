@@ -1,0 +1,10 @@
+# Managed by Ansible (infra/ansible/roles/ssh)
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+ChallengeResponseAuthentication no
+PubkeyAuthentication yes
+X11Forwarding no
+MaxAuthTries 3
+LoginGraceTime 30
+AllowUsers {{ ssh_allow_users | join(' ') }}

@@ -1,0 +1,2 @@
+# Copy to terraform.tfvars (git-ignored).
+# tailscale_authkey = "tskey-auth-..."   # single-use, pre-authorized, tag:worker

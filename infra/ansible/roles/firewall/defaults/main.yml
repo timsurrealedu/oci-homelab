@@ -1,0 +1,6 @@
+firewall_public_tcp: [22]
+firewall_allow_from: []  # list of {src: CIDR, port: N}
+firewall_rules: >-
+  {{ [{'comment': 'tailnet', 'iface': 'tailscale0'}]
+     + firewall_public_tcp | map('community.general.dict_kv', 'port') | map('combine', {'comment': 'public'}) | list
+     + firewall_allow_from | map('combine', {'comment': 'from-subnet'}) | list }}

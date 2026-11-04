@@ -1,0 +1,27 @@
+- name: Restart all
+  ansible.builtin.command: docker compose up -d --remove-orphans
+  args:
+    chdir: "{{ monitoring_dir }}"
+  changed_when: true
+
+- name: Restart prometheus
+  ansible.builtin.command: docker compose restart prometheus
+  args:
+    chdir: "{{ monitoring_dir }}"
+  changed_when: true
+
+- name: Restart alertmanager
+  ansible.builtin.command: docker compose restart alertmanager
+  args:
+    chdir: "{{ monitoring_dir }}"
+  changed_when: true
+
+- name: Restart grafana
+  ansible.builtin.command: docker compose restart grafana
+  args:
+    chdir: "{{ monitoring_dir }}"
+  changed_when: true
+
+- name: Restart none
+  ansible.builtin.debug:
+    msg: Grafana reloads provisioned dashboards on its own

@@ -1,0 +1,3 @@
+base_swap_size: 2G
+base_sysctl:
+  vm.swappiness: 10

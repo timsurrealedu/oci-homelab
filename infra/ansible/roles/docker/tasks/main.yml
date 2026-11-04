@@ -1,0 +1,25 @@
+# Ubuntu's docker.io (already on the edge). Containers that publish ports must bind 127.0.0.1 or a
+# private/tailnet IP: Docker's NAT rules bypass the INPUT chain.
+- name: Install Docker and the compose plugin
+  ansible.builtin.apt:
+    name: [docker.io, docker-compose-v2]
+    state: present
+
+- name: Docker daemon config (log rotation, keep containers up across daemon restarts)
+  ansible.builtin.copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ docker_daemon | to_nice_json }}\n"
+    mode: "0644"
+  notify: Restart docker
+
+- name: Docker running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Admin user in docker group
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: true

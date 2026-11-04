@@ -1,0 +1,24 @@
+# Live rules are added one at a time (never a full iptables-restore: that would wipe Docker's and
+# Tailscale's chains). The same rules go into rules.v4 for boot, next to Oracle's InstanceServices chain.
+# honey: rules removed from the vars stay live until reboot or `iptables -D`; add a removal list if that bites.
+- name: Allow tailnet, public ports and per-source ports (live)
+  ansible.builtin.iptables:
+    chain: INPUT
+    action: insert
+    comment: "{{ item.comment }}"
+    in_interface: "{{ item.iface | default(omit) }}"
+    source: "{{ item.src | default(omit) }}"
+    protocol: "{{ 'tcp' if item.port is defined else omit }}"
+    destination_port: "{{ item.port | string if item.port is defined else omit }}"
+    ctstate: "{{ ['NEW'] if item.port is defined else omit }}"
+    jump: ACCEPT
+  loop: "{{ firewall_rules }}"
+  loop_control:
+    label: "{{ item.comment }} {{ item.src | default(item.iface | default('any')) }} {{ item.port | default('') }}"
+
+- name: Persist rules for boot
+  ansible.builtin.template:
+    src: rules.v4.j2
+    dest: /etc/iptables/rules.v4
+    mode: "0640"
+    validate: iptables-restore --test %s

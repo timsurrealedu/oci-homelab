@@ -1,0 +1,14 @@
+- name: Baseline for all servers
+  hosts: all
+  roles:
+    - base
+    - ssh
+    - firewall
+    - docker
+    - tailscale
+    - node_exporter
+
+- name: Monitoring stack
+  hosts: monitoring_hosts
+  roles:
+    - monitoring

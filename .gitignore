@@ -1,0 +1,25 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+# Secrets
+.env
+*.env
+*.pem
+*.key
+.oci/
+# Python / misc
+__pycache__/
+.venv/
+*.tfplan
+tfplan*
+!*.tfvars.example
+# SSH private keys
+id_*
+!id_*.pub
+# Terraform -generate-config scratch
+generated*.tf
+plan.err
+apply.log
