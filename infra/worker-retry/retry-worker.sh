@@ -32,7 +32,14 @@ rc=$?
 
 if [ $rc -eq 0 ] && [[ $out == ocid1.instance.* ]]; then
   finish "🎉 oci-homelab: worker LAUNCHED after $n attempts: $out. Tell Claude to import it into Terraform. Timer stopped."
+elif grep -q '"LimitExceeded"' <<<"$out"; then
+  # ap-batam-1 sometimes answers LimitExceeded while the A1 quota has room (seen at attempt 47 with
+  # 1/2 OCPU used). Treat it as transient; stop only if it persists for an hour.
+  k=$(( $(cat "$D/limit_streak" 2>/dev/null || echo 0) + 1 )); echo "$k" > "$D/limit_streak"
+  echo "attempt $n: LimitExceeded ($k in a row)"
+  [ "$k" -ge 12 ] && finish "⚠️ oci-homelab: LimitExceeded $k times in a row (attempt $n). Check A1 usage under Limits, Quotas and Usage. Timer stopped."
 elif grep -qiE 'out of host capacity|TooManyRequests|InternalError' <<<"$out"; then
+  rm -f "$D/limit_streak"
   echo "attempt $n: capacity/transient: $(tr -s '\n ' ' ' <<<"$out" | grep -oE '"(code|message)": "[^"]*"' | tr '\n' ' ' | cut -c1-200)"
   [ $((n % 288)) -eq 0 ] && notify "⏳ oci-homelab: still no A1 capacity in Batam ($n attempts so far)."
   [ "$n" -ge "$MAX_ATTEMPTS" ] && finish "🛑 oci-homelab: gave up on the worker after $n attempts (7 days). Timer stopped."

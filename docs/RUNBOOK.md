@@ -25,6 +25,8 @@ The worker is reached at `10.0.1.10` with `~/.ssh/id_ed25519_ansible` (its publi
 
 See ADR-006. Status: `systemctl status worker-retry.timer`, log: `journalctl -u worker-retry.service`, attempts: `/opt/oci-homelab/worker-retry/attempts`. Telegram test: `sudo /opt/oci-homelab/worker-retry/notify-telegram.sh "test"`.
 
+Errors: "Out of host capacity", TooManyRequests and InternalError retry silently. LimitExceeded also retries (Batam returned it once with the quota half free, 2026-11-04) and stops after 12 in a row. Any other error stops the timer with a ⚠️ message. To resume after fixing: `sudo systemctl enable --now worker-retry.timer`.
+
 ## Backups
 
 - Boot volume backups (2 of 5 free used): `newLifeOS-pre-phase1-2026-11-04`, `lifeos-a1-orphan-final-2026-11-04`.
