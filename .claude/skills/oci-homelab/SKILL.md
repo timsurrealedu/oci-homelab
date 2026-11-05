@@ -15,8 +15,7 @@ Read `PRD.md` in this project for the goals. This file holds the facts and rules
 - **Since Phase 3 start (2026-11-04):** monitoring stack on the edge (`/opt/oci-homelab/monitoring`, Ansible role `monitoring`): Prometheus, Alertmanager → Telegram @timsurrealbot, Grafana, Uptime Kuma, all on 127.0.0.1 and published via Tailscale Serve ports 3000/3002/9090/9093. Telegram settings in `/etc/oci-homelab/telegram.env`. URLs in `docs/RUNBOOK.md`.
 - Original instance (pre-Phase 1): `newLifeOS` (hostname `instance-20260702-1842`), `VM.Standard.A1.Flex` 2 OCPU / 8 GB, Ubuntu 20.04, 45 GB boot volume (27 GB used). Private IP `10.0.0.165` in subnet `10.0.0.0/24`. Public IP `168.110.202.46`. Tailscale `100.112.185.21` (offers exit node).
 - SSH from Windows: `ssh -i ~/.ssh/oracle_lifeos ubuntu@100.112.185.21`. Keep `-o BatchMode=yes` for scripted calls.
-- Running there now: Docker `freqtrade` (aiTrading, dry-run, OKX), pm2 `lifeOS`, `lifeOS-editor`, `lifeOS-playground`, `noema`, `noema-worker`, `readchinese`, plus Syncthing (8384/22000) holding `/home/ubuntu/Obsidian Vault`.
-- Listening on 0.0.0.0: 22, 80, 3001, 7681 (ttyd web terminal), 7777, 8888. Check what the security list exposes to the internet before anything else.
+- Running now (since Phase 0): Docker `freqtrade` (dry-run, OKX), pm2 `readchinese` (no Funnel), Syncthing holding `/home/ubuntu/Obsidian Vault`, the monitoring stack, `worker-retry.timer`. The lifeOS/noema pm2 apps (and ttyd/Jupyter with them) were decommissioned. Only SSH :22 is reachable from the internet. Current state and next steps: `docs/STATUS.md`.
 
 ## Always Free limits (Oracle docs as of 2026-11)
 
