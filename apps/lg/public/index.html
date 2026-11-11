@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batam Looking Glass</title>
+<meta name="description" content="Ping, traceroute and DNS lookups from an Oracle Cloud server in Batam, Indonesia.">
+<link rel="stylesheet" href="/ui/gruvbox.css">
+<script type="module" src="/ui/ui.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body data-app="lg">
+<div class="shell">
+  <header class="top">
+    <a class="prompt" href="/"><b>tim@batam</b>:<i>~/oci-homelab</i>$ <em>lg</em><span class="cursor" aria-hidden="true"></span></a>
+    <nav class="tabs" aria-label="Demos"><a href="#" data-app="lg">lg</a><a href="#" data-app="trading">trading</a><a href="#" data-app="trace">trace</a></nav>
+  </header>
+  <main>
+    <h1>Looking glass</h1>
+    <p class="lead">Run ping, traceroute (mtr) or a DNS lookup from an Oracle Cloud server in Batam, Indonesia, and see the internet from there.</p>
+
+    <section class="panel" aria-labelledby="h-q">
+      <h2 id="h-q">query</h2>
+      <form id="f" class="lg-form">
+        <label class="sr-only" for="tool">Tool</label>
+        <select id="tool" name="tool">
+          <option value="ping">ping</option>
+          <option value="mtr">mtr</option>
+          <option value="dns">dns</option>
+        </select>
+        <label class="sr-only" for="target">Hostname or IP address</label>
+        <input id="target" name="target" placeholder="example.com or 1.1.1.1" required maxlength="253" autocomplete="off" spellcheck="false">
+        <label class="sr-only" for="type">Record type</label>
+        <select id="type" name="type" hidden>
+          <option>A</option><option>AAAA</option><option>MX</option><option>TXT</option><option>NS</option><option>CNAME</option><option>CAA</option><option>SOA</option>
+        </select>
+        <button class="btn" id="go">run ›</button>
+      </form>
+    </section>
+
+    <section class="panel" aria-labelledby="h-out" aria-live="polite">
+      <h2 id="h-out">output</h2>
+      <pre class="term" id="res"><span class="cmd">$</span> waiting for a target…</pre>
+    </section>
+  </main>
+  <footer class="foot">Public IPv4 hostnames and addresses only, 6 lookups a minute. Lookups and the requesting address are logged. Part of oci-homelab, a $0 Oracle Cloud platform.</footer>
+</div>
+</body>
+</html>

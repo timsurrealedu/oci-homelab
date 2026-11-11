@@ -1,6 +1,6 @@
 """Looking glass: ping, mtr and DNS lookups from Oracle Cloud ap-batam-1, for public targets only.
 
-Stdlib only. Runs behind Caddy, which sets X-Forwarded-For to the real client address.
+Stdlib only. Runs behind Caddy, which serves the page (public/) and sets X-Forwarded-For to the real client address.
 Guardrails: targets must be a hostname or IP that resolves only to global addresses (no private,
 loopback, link-local, CGNAT/Tailscale or metadata ranges); tools get the resolved IP, never user
 text, so no flags or DNS rebinding; fixed tool arguments; per-client rate limit; global
@@ -16,7 +16,6 @@ import threading
 import time
 from collections import defaultdict, deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 HOSTNAME = re.compile(r"^(?=.{1,253}$)(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.(?!-)[A-Za-z0-9-]{1,63}(?<!-))*\.?$")
@@ -25,7 +24,6 @@ RATE_PER_MIN = int(os.environ.get("LG_RATE_PER_MIN", "6"))
 TIMEOUT_S = 30
 MAX_OUTPUT = 20_000
 
-INDEX = (Path(__file__).parent / "index.html").read_bytes()
 _busy = threading.BoundedSemaphore(int(os.environ.get("LG_CONCURRENCY", "2")))
 _hits: dict[str, deque] = defaultdict(deque)
 _hits_lock = threading.Lock()
@@ -49,8 +47,11 @@ def resolve_public(target: str) -> str:
         ips = [ipaddress.ip_address(i[4][0]) for i in infos]
     if not ips or not all(ip.is_global and not ip.is_multicast for ip in ips):
         raise Rejected("only public addresses are allowed")
-    v4 = [ip for ip in ips if ip.version == 4]  # the server has IPv4 only
-    return str((v4 or ips)[0])
+    # IPv4 only: the server has no IPv6 route, and v6 forms like NAT64 (64:ff9b::/96) can wrap private v4.
+    v4 = [ip for ip in ips if ip.version == 4]
+    if not v4:
+        raise Rejected("only IPv4 targets are supported")
+    return str(v4[0])
 
 
 def build_command(tool: str, target: str, rtype: str = "A") -> list[str]:
@@ -106,8 +107,6 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         url = urlparse(self.path)
-        if url.path == "/":
-            return self.send(200, INDEX, "text/html; charset=utf-8")
         if url.path == "/healthz":
             return self.send(200, b"ok", "text/plain")
         if url.path != "/api/run":

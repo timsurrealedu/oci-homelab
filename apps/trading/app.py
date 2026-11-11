@@ -1,6 +1,6 @@
 """Read-only paper-trading dashboard for the freqtrade bot.
 
-The browser never talks to freqtrade. This server logs in to freqtrade's API (127.0.0.1:8080) with
+The browser never talks to freqtrade (Caddy serves the page from public/). This server logs in to freqtrade's API (http://freqtrade:8080 on freqtrade's Docker network) with
 credentials from a root-only env file, fetches a few read-only endpoints, keeps only whitelisted
 fields, caches the result for a minute and serves it as /api/summary. It refuses to show anything
 if the bot is not in dry-run mode (live money is out of scope).
@@ -12,11 +12,9 @@ import threading
 import time
 import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 
 FT_URL = os.environ.get("FT_URL", "http://127.0.0.1:8080").rstrip("/")
 CACHE_S = 60
-INDEX = (Path(__file__).parent / "index.html").read_bytes()
 
 _cache: dict = {"at": 0.0, "body": None}
 _cache_lock = threading.Lock()
@@ -118,8 +116,6 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
-        if self.path == "/":
-            return self.send(200, INDEX, "text/html; charset=utf-8")
         if self.path == "/healthz":
             return self.send(200, b"ok", "text/plain")
         if self.path != "/api/summary":
@@ -134,4 +130,4 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    ThreadingHTTPServer(("127.0.0.1", int(os.environ.get("PORT", "8092"))), Handler).serve_forever()
+    ThreadingHTTPServer(("0.0.0.0", int(os.environ.get("PORT", "8092"))), Handler).serve_forever()

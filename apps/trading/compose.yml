@@ -1,5 +1,6 @@
-# Deployed by Ansible (roles/apps). Host network so it can reach freqtrade's API on 127.0.0.1:8080;
-# it listens on 127.0.0.1:8092 only and is reached through Caddy (:8093 today, trading.<domain> later).
+# Deployed by Ansible (roles/apps). Bridge networking, joined to freqtrade's compose network so it reaches
+# the bot as http://freqtrade:8080 without host networking (so no access to anything else on 127.0.0.1).
+# Listens on 127.0.0.1:8092 only and is reached through Caddy (:8093 today, trading.<domain> later).
 name: trading
 
 services:
@@ -7,10 +8,18 @@ services:
     build: .
     image: oci-homelab/trading:local
     restart: unless-stopped
-    network_mode: host
+    ports: ["127.0.0.1:8092:8092"]
+    networks: [default, freqtrade]
+    environment:
+      FT_URL: http://freqtrade:8080
     env_file: /etc/oci-homelab/secrets/trading.env   # FT_USER / FT_PASS, written by roles/apps from freqtrade's config
     read_only: true
     cap_drop: [ALL]
     security_opt: ["no-new-privileges:true"]
     mem_limit: 96m
     pids_limit: 32
+
+networks:
+  freqtrade:
+    external: true
+    name: aitrading_default

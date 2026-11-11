@@ -1,4 +1,4 @@
-"""Trace your request: shows the path a visitor's request takes into the platform, with real timings.
+"""Trace your request (API; Caddy serves the page from public/): shows the path a visitor's request takes into the platform, with real timings.
 
 Hops measured per request:
   browser -> edge      : the browser measures it (fetch timing minus the server's Server-Timing total)
@@ -13,10 +13,8 @@ import socket
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from urllib.parse import urlparse
 
-INDEX = (Path(__file__).parent / "index.html").read_bytes()
 PROBE_CACHE_S = 30
 
 # (id, label, host, port, explanation)
@@ -96,8 +94,6 @@ class Handler(BaseHTTPRequestHandler):
         arrived_ms = time.time() * 1000
         t0 = time.perf_counter()
         path = urlparse(self.path).path  # the page adds ?t=<now> so each trace is a fresh timing entry
-        if path == "/":
-            return self.send(200, INDEX, "text/html; charset=utf-8")
         if path == "/healthz":
             return self.send(200, b"ok", "text/plain")
         if path != "/api/trace":

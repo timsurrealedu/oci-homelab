@@ -9,6 +9,7 @@ A small, production-style platform on Oracle Cloud's **Always Free** tier (ap-ba
 - **Infrastructure as code.** Terraform imports a hand-built VCN and server without recreating them, then adds a private subnet, NAT and service gateways, and per-role network security groups. Ansible configures the server idempotently.
 - **Network design.** Public and private subnets, a worker reachable only from the edge's NSG, and a Tailscale overlay as the only path to admin interfaces.
 - **Security by default.** Only SSH (keys only) answers from the internet. No admin UI on a public port. Secrets live outside git, and CI scans the full history with gitleaks.
+- **Reviewed security.** A recorded review ([docs/SECURITY.md](docs/SECURITY.md)) probed the demos for SSRF bypasses, header injection, traversal and container escape paths; findings were fixed and regression-tested.
 - **Observability.** Prometheus, Alertmanager, Grafana and Uptime Kuma, with Telegram alerts. One alert watches Oracle's idle-reclamation rule so the free server isn't taken back.
 - **Operating under constraints.** The free tier caps ARM compute at 2 OCPU / 12 GB, so the existing server was shrunk in place. The second server's launch is retried from the first one using a launch-only instance-principal policy, with Telegram notifications ([ADR-006](docs/DECISIONS.md)).
 

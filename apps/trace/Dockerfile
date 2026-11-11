@@ -1,6 +1,6 @@
 FROM python:3.13-alpine
 WORKDIR /app
-COPY app.py index.html ./
+COPY app.py ./
 ENV PYTHONDONTWRITEBYTECODE=1
 USER 65534:65534
 EXPOSE 8094

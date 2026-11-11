@@ -47,7 +47,7 @@ From the internet, only SSH answers today. Port 80/443 open publicly when Caddy 
 | Caddy (HTTP entry) | Docker, host network, :80 + 127.0.0.1:8091, admin/metrics 127.0.0.1:2019 | Public 80/443 closed until a domain exists |
 | smartStudent | Caddy :80 (static SPA) + Node :3001 | Tailscale Serve :8443 |
 | Looking glass (`apps/lg`) | Docker, 127.0.0.1:8090, behind Caddy :8091; NET_RAW only, read-only, 128 MB | Tailscale Serve :8446 |
-| Trading dashboard (`apps/trading`) | Docker (host net, user nobody, no caps), 127.0.0.1:8092, behind Caddy :8093; reads freqtrade's API server-side with root-only credentials, whitelists fields, refuses non-dry-run | Tailscale Serve :8447 |
+| Trading dashboard (`apps/trading`) | Docker (bridge + freqtrade's network, user nobody, no caps), 127.0.0.1:8092, behind Caddy :8093; reads freqtrade's API server-side with root-only credentials, whitelists fields, refuses non-dry-run | Tailscale Serve :8447 |
 | Request tracer (`apps/trace`) | Docker (bridge, user nobody, no caps), 127.0.0.1:8094, behind Caddy :8095 which stamps `X-Trace-Caddy-In`; background probes to fixed targets (internet, GitHub, worker) | Tailscale Serve :8448 |
 | readChinese | Next.js :3108 (pm2) | Tailscale Serve :8445 |
 | Syncthing (Obsidian Vault) | systemd, GUI 127.0.0.1:8384 | Sync port 22000 not open publicly (host firewall) |
@@ -68,3 +68,7 @@ InstanceDown, DiskAlmostFull, MemoryPressure, and **ReclamationRisk**. Oracle re
 | CI | GitHub Actions | `terraform fmt`/`validate`, `ansible-lint`, syntax check, gitleaks. |
 
 Decisions and their reasons: [`DECISIONS.md`](DECISIONS.md). Operating it: [`RUNBOOK.md`](RUNBOOK.md).
+
+## Demo front end
+
+Caddy serves every demo page as static files (`apps/<name>/public/`) plus a shared design system at `/ui/` (`apps/_ui/`: retro gruvbox CSS, self-hosted VT323 and IBM Plex Mono, a tiny nav script). Only `/api/*` reaches the Python apps. With no inline scripts or styles, every demo sends a strict Content-Security-Policy. Security review: [`SECURITY.md`](SECURITY.md).

@@ -7,7 +7,8 @@ from app import Rejected, build_command, resolve_public
 class TargetValidation(unittest.TestCase):
     def test_rejects_non_public_addresses(self):
         for t in ["10.0.0.165", "10.0.1.10", "127.0.0.1", "169.254.169.254", "100.112.185.21",
-                  "192.168.1.1", "0.0.0.0", "::1", "fd7a:115c:a1e0::1", "224.0.0.1", "localhost"]:
+                  "192.168.1.1", "0.0.0.0", "::1", "fd7a:115c:a1e0::1", "224.0.0.1", "localhost",
+                  "::ffff:127.0.0.1", "64:ff9b::7f00:1", "2002:7f00:1::1", "2606:4700:4700::1111", "2130706433", "0x7f.0.0.1"]:
             with self.subTest(t=t), self.assertRaises(Rejected):
                 resolve_public(t)
 

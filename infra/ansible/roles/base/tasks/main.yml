@@ -59,3 +59,16 @@
     value: "{{ item.value }}"
     sysctl_file: /etc/sysctl.d/90-oci-homelab.conf
   loop: "{{ base_sysctl | dict2items }}"
+
+# rpcbind ships with the cloud image (for NFS, unused here) and listens on 0.0.0.0:111.
+- name: Read service list
+  ansible.builtin.service_facts:
+
+- name: Disable rpcbind
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop: [rpcbind.socket, rpcbind.service]
+  when: "'rpcbind.service' in ansible_facts.services"

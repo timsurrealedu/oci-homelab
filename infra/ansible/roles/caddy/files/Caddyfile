@@ -37,23 +37,57 @@
 	}
 }
 
+# Demos (apps/<name>): Caddy serves the page from public/ and the shared UI at /ui/; only /api/* reaches the app.
+# No inline scripts or styles anywhere, so the CSP can be strict. Usage: import demo <app dir name>
+(demo) {
+	encode zstd gzip
+	header {
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		-Server
+	}
+	handle_path /ui/* {
+		root * /srv/apps/_ui
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+	handle {
+		root * /srv/apps/{args[0]}/public
+		header Cache-Control "no-cache"
+		file_server
+	}
+}
+
 # Looking glass (apps/lg). Tailnet-only via Tailscale Serve :8446 until it becomes lg.<domain>.
 :8091 {
 	bind 127.0.0.1
-	reverse_proxy 127.0.0.1:8090
+	import demo lg
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8090
+	}
 }
 
 # Paper-trading dashboard (apps/trading). Tailnet-only via Tailscale Serve :8447 until it becomes trading.<domain>.
 :8093 {
 	bind 127.0.0.1
-	reverse_proxy 127.0.0.1:8092
+	import demo trading
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8092
+	}
 }
 
 # Request tracer (apps/trace). Stamps the forward time so the app can show the Caddy -> app hop.
 # Tailnet-only via Tailscale Serve :8448 until it becomes trace.<domain>.
 :8095 {
 	bind 127.0.0.1
-	reverse_proxy 127.0.0.1:8094 {
-		header_up X-Trace-Caddy-In {time.now.unix_ms}
+	import demo trace
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8094 {
+			header_up X-Trace-Caddy-In {time.now.unix_ms}
+		}
 	}
 }

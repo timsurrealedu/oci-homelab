@@ -3,6 +3,13 @@
   ansible.builtin.include_tasks: trading.yml
   when: "'trading' in apps_enabled"
 
+- name: Copy the shared UI (served by Caddy at /ui/)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../apps/_ui/"
+    dest: "{{ apps_dir }}/_ui/"
+    mode: "0644"
+    directory_mode: "0755"
+
 - name: Copy app sources
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../../apps/{{ item }}/"

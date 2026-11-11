@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper Trading Bot</title>
+<meta name="description" content="Live results of a crypto trading bot running on paper money. Not financial advice.">
+<link rel="stylesheet" href="/ui/gruvbox.css">
+<script type="module" src="/ui/ui.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body data-app="trading">
+<div class="shell">
+  <header class="top">
+    <a class="prompt" href="/"><b>tim@batam</b>:<i>~/oci-homelab</i>$ <em>trading</em><span class="cursor" aria-hidden="true"></span></a>
+    <nav class="tabs" aria-label="Demos"><a href="#" data-app="lg">lg</a><a href="#" data-app="trading">trading</a><a href="#" data-app="trace">trace</a></nav>
+  </header>
+  <main>
+    <h1>Paper trading bot</h1>
+    <p class="lead" id="sub">Loading…</p>
+    <p class="note" role="note"><strong>Paper money, not advice.</strong> This bot trades a simulated wallet. No real funds are at risk, and nothing here is a recommendation to buy or sell anything.</p>
+
+    <section class="panel" aria-labelledby="h-sum">
+      <h2 id="h-sum">summary</h2>
+      <dl class="tiles" id="tiles"></dl>
+    </section>
+
+    <section class="panel" aria-labelledby="h-eq">
+      <h2 id="h-eq">equity</h2>
+      <p class="hint">Simulated wallet value after each closed trade. Hover, or focus the chart and use the arrow keys.</p>
+      <div class="chart">
+        <svg id="chart" viewBox="0 0 900 300" role="img" aria-labelledby="chart-desc"><desc id="chart-desc">Equity curve</desc></svg>
+        <div class="tip" id="tip" hidden></div>
+      </div>
+      <details><summary>show as table</summary><div class="wrap"><table id="eqtable"><thead><tr><th>Closed</th><th class="n">Equity</th></tr></thead><tbody></tbody></table></div></details>
+    </section>
+
+    <section class="panel" aria-labelledby="h-open">
+      <h2 id="h-open">open positions</h2>
+      <div class="wrap"><table id="open"><thead><tr><th>Pair</th><th>Opened</th><th class="n">Profit</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-rec">
+      <h2 id="h-rec">recent trades</h2>
+      <div class="wrap"><table id="recent"><thead><tr><th>Pair</th><th>Opened</th><th>Closed</th><th class="n">Profit</th><th class="n">P/L</th><th>Exit</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </main>
+  <footer class="foot" id="foot">Data refreshes every minute through a read-only backend; the bot's own API is never exposed. Part of oci-homelab, a $0 Oracle Cloud platform.</footer>
+</div>
+</body>
+</html>

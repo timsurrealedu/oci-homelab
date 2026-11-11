@@ -54,3 +54,9 @@ Short ADRs. Newest last.
 **Decision.** Tim's call: the platform is built on the edge alone. Everything the PRD put on the worker (deploy platform, freqtrade, recon jobs, demo backends) runs on the edge for now. The retry timer keeps going (limit raised to 10,500 attempts, about 5 weeks from 2026-11-04; the ⏳ note is now weekly). The edge stays at 1 OCPU / 6 GB so the worker still fits the free quota if a launch succeeds.
 **If the worker arrives.** Import it (ADR-006), run the Ansible baseline, then move the heavy or risky workloads (recon, stewie rendering, freqtrade) to it by changing inventory groups. Services are written host-agnostic (compose + Ansible roles keyed by groups) so this is a move, not a rewrite.
 **Trade-off.** One box means public traffic and private workloads share a kernel; the NSG, host firewall and localhost/Tailscale-only admin binds carry more of the weight.
+
+## ADR-010: Static pages from Caddy, one shared retro-gruvbox UI (2026-11-11)
+
+**Context.** Each demo served its own HTML from Python with inline CSS/JS. That blocked a strict CSP, duplicated styling, and the three pages looked unrelated.
+**Decision.** Caddy serves `apps/<name>/public/` and a shared `apps/_ui/` (gruvbox tokens for light and dark, VT323 display + IBM Plex Mono body, self-hosted under the OFL, no third-party requests). The apps only answer `/api/*`. Chart series colour is gruvbox orange (`#d65d0e` dark, `#af3a03` light), the accents that pass the dataviz palette checks on gruvbox surfaces; gruvbox blue reads as gray. Motion: staggered panel rise, line-by-line terminal output, chart draw-on, the tracer's packet; all off under `prefers-reduced-motion`.
+**Why.** One look across the platform, a strict CSP (`default-src 'self'`), and no visitor data sent to font CDNs.

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trace Your Request</title>
+<meta name="description" content="Follow your request into a small Oracle Cloud platform, hop by hop, with real timings.">
+<link rel="stylesheet" href="/ui/gruvbox.css">
+<script type="module" src="/ui/ui.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body data-app="trace">
+<div class="shell">
+  <header class="top">
+    <a class="prompt" href="/"><b>tim@batam</b>:<i>~/oci-homelab</i>$ <em>trace</em><span class="cursor" aria-hidden="true"></span></a>
+    <nav class="tabs" aria-label="Demos"><a href="#" data-app="lg">lg</a><a href="#" data-app="trading">trading</a><a href="#" data-app="trace">trace</a></nav>
+  </header>
+  <main>
+    <h1>Trace your request</h1>
+    <p class="lead">Follow this page's own request into a small Oracle Cloud platform in Batam, Indonesia. Every number is measured live.</p>
+    <p><button class="btn" id="run">trace again ›</button></p>
+
+    <section class="panel" aria-labelledby="h-path">
+      <h2 id="h-path">the way in</h2>
+      <ol class="timeline" id="path"><li class="hop"><h3>tracing…</h3></li></ol>
+    </section>
+
+    <section class="panel" aria-labelledby="h-out">
+      <h2 id="h-out">paths from the edge</h2>
+      <p class="hint" id="probe-note">TCP handshake time from the server to fixed targets.</p>
+      <div class="bars" id="bars"></div>
+    </section>
+  </main>
+  <footer class="foot">You can't pick the targets: outbound checks use fixed ones and refresh every 30 seconds in the background. Part of oci-homelab, a $0 Oracle Cloud platform built with Terraform and Ansible.</footer>
+</div>
+</body>
+</html>
