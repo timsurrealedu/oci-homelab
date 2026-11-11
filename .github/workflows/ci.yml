@@ -60,3 +60,5 @@ jobs:
         run: python -m unittest discover -s apps/lg -v
       - name: Trading dashboard unit tests
         run: python -m unittest discover -s apps/trading -v
+      - name: Request tracer unit tests
+        run: python -m unittest discover -s apps/trace -v

@@ -8,3 +8,4 @@ caddy_tailnet_ports:
   8443: 80     # smartStudent
   8446: 8091   # looking glass
   8447: 8093   # trading dashboard
+  8448: 8095   # request tracer

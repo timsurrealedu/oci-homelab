@@ -1,0 +1,15 @@
+# Deployed by Ansible (roles/apps). Bridge network on purpose: the Caddy -> app hop crosses Docker's bridge,
+# and that hop is part of what the page shows. Reached through Caddy (:8095 today, trace.<domain> later).
+name: trace
+
+services:
+  trace:
+    build: .
+    image: oci-homelab/trace:local
+    restart: unless-stopped
+    ports: ["127.0.0.1:8094:8094"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 64m
+    pids_limit: 32

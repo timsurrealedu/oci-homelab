@@ -48,3 +48,12 @@
 	bind 127.0.0.1
 	reverse_proxy 127.0.0.1:8092
 }
+
+# Request tracer (apps/trace). Stamps the forward time so the app can show the Caddy -> app hop.
+# Tailnet-only via Tailscale Serve :8448 until it becomes trace.<domain>.
+:8095 {
+	bind 127.0.0.1
+	reverse_proxy 127.0.0.1:8094 {
+		header_up X-Trace-Caddy-In {time.now.unix_ms}
+	}
+}
