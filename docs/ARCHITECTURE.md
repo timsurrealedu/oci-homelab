@@ -47,6 +47,7 @@ From the internet, only SSH answers today. Port 80/443 open publicly when Caddy 
 | Caddy (HTTP entry) | Docker, host network, :80 + 127.0.0.1:8091, admin/metrics 127.0.0.1:2019 | Public 80/443 closed until a domain exists |
 | smartStudent | Caddy :80 (static SPA) + Node :3001 | Tailscale Serve :8443 |
 | Looking glass (`apps/lg`) | Docker, 127.0.0.1:8090, behind Caddy :8091; NET_RAW only, read-only, 128 MB | Tailscale Serve :8446 |
+| Trading dashboard (`apps/trading`) | Docker (host net, user nobody, no caps), 127.0.0.1:8092, behind Caddy :8093; reads freqtrade's API server-side with root-only credentials, whitelists fields, refuses non-dry-run | Tailscale Serve :8447 |
 | readChinese | Next.js :3108 (pm2) | Tailscale Serve :8445 |
 | Syncthing (Obsidian Vault) | systemd, GUI 127.0.0.1:8384 | Sync port 22000 not open publicly (host firewall) |
 | Worker launch retry | systemd timer, instance principal, Telegram | Outbound only |

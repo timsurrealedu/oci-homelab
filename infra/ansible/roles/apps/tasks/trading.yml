@@ -1,0 +1,18 @@
+# Credentials for the trading dashboard, taken from freqtrade's own config on the host.
+- name: Read freqtrade API credentials
+  ansible.builtin.slurp:
+    src: "{{ apps_freqtrade_config }}"
+  register: apps_ft_config
+  no_log: true
+
+- name: Write trading dashboard credentials (root only)
+  ansible.builtin.copy:
+    dest: /etc/oci-homelab/secrets/trading.env
+    content: |
+      FT_USER={{ (apps_ft_config.content | b64decode | from_json).api_server.username }}
+      FT_PASS={{ (apps_ft_config.content | b64decode | from_json).api_server.password }}
+    owner: root
+    group: root
+    mode: "0600"
+  register: apps_trading_env
+  no_log: true

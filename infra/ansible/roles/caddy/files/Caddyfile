@@ -42,3 +42,9 @@
 	bind 127.0.0.1
 	reverse_proxy 127.0.0.1:8090
 }
+
+# Paper-trading dashboard (apps/trading). Tailnet-only via Tailscale Serve :8447 until it becomes trading.<domain>.
+:8093 {
+	bind 127.0.0.1
+	reverse_proxy 127.0.0.1:8092
+}

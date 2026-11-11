@@ -1,4 +1,8 @@
-# Copies each app from the repo and rebuilds it only when its files changed.
+# Copies each app from the repo and rebuilds it only when its files (or its secrets) changed.
+- name: Trading dashboard secrets
+  ansible.builtin.include_tasks: trading.yml
+  when: "'trading' in apps_enabled"
+
 - name: Copy app sources
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/../../apps/{{ item }}/"
@@ -15,5 +19,5 @@
   loop: "{{ apps_copy.results }}"
   loop_control:
     label: "{{ item.item }}"
-  when: item.changed
+  when: item.changed or (item.item == 'trading' and apps_trading_env is changed)
   changed_when: true

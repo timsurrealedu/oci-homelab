@@ -1,3 +1,5 @@
 apps_dir: /opt/oci-homelab/apps
 # Each name is a folder under the repo's apps/ with a compose.yml (and usually a Dockerfile).
-apps_enabled: [lg]
+apps_enabled: [lg, trading]
+# The trading dashboard reads freqtrade's API credentials from here (never stored in git).
+apps_freqtrade_config: /home/ubuntu/aiTrading/user_data/config.json

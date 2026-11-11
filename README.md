@@ -53,7 +53,8 @@ Oracle Cloud (A1 Flex ARM, VCN, NSGs, NAT gateway) · Terraform · Ansible · Do
 - [x] Network looking glass (ping, mtr, DNS from Batam) with target validation and rate limits, tailnet-only for now
 - [ ] Domain, public HTTPS and a public status page
 - [ ] Self-hosted interactsh and a scope-limited recon pipeline for bug bounty
-- [ ] Public demos: request tracer across subnets, paper-trading dashboard
+- [x] Paper-trading dashboard (equity curve, trades) from freqtrade via a read-only, field-whitelisting backend, tailnet-only for now
+- [ ] Public demo: request tracer across subnets
 - [ ] Restore drill from backup
 
 ## Cost
