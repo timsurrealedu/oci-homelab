@@ -49,9 +49,11 @@ Oracle Cloud (A1 Flex ARM, VCN, NSGs, NAT gateway) · Terraform · Ansible · Do
 - [x] Ansible baseline (SSH hardening, firewall, fail2ban, Docker, Tailscale)
 - [x] Monitoring and Telegram alerting
 - [x] CI: Terraform, Ansible lint, secret scan
-- [ ] Public entry with Caddy and a domain, public status page
+- [x] Caddy as the single HTTP entry point (Ansible-managed)
+- [x] Network looking glass (ping, mtr, DNS from Batam) with target validation and rate limits, tailnet-only for now
+- [ ] Domain, public HTTPS and a public status page
 - [ ] Self-hosted interactsh and a scope-limited recon pipeline for bug bounty
-- [ ] Public demos: request tracer across subnets, network looking glass, paper-trading dashboard
+- [ ] Public demos: request tracer across subnets, paper-trading dashboard
 - [ ] Restore drill from backup
 
 ## Cost

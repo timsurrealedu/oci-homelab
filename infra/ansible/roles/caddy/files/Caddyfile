@@ -36,3 +36,9 @@
 		file_server
 	}
 }
+
+# Looking glass (apps/lg). Tailnet-only via Tailscale Serve :8446 until it becomes lg.<domain>.
+:8091 {
+	bind 127.0.0.1
+	reverse_proxy 127.0.0.1:8090
+}

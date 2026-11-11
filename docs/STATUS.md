@@ -18,7 +18,7 @@ Safety rules (cost $0, never terminate without a backup and Tim's yes, no admin 
 | 2 Server baseline | ✅ done on the edge | Ansible (`infra/ansible/`, run *from the edge*). Worker gets the same baseline once it exists. Tailscale ACL drafted, not applied (Tim's step). |
 | 3 Platform | 🟡 partly | Monitoring is live on the edge (tailnet-only). Deploy platform = Caddy + compose via Ansible (Tim's pick, 2026-11-11): role `caddy` runs Caddy 2.11.2 on :80 (host nginx stopped, config kept for rollback), serves smartStudent with identical responses, metrics scraped by Prometheus. Public 80/443 stay closed until a domain + Tim's yes; then drop `auto_https off` and open the firewall. freqtrade stays on the edge. |
 | 4 Recon platform | ⬜ not started | Needs a domain (interactsh NS delegation) and Tim's scope files. |
-| 5 Public demos | ⬜ not started | Needs the worker, Caddy and a domain. Every demo needs Tim's yes before going public. |
+| 5 Public demos | 🟡 started | **Looking glass** (`apps/lg`) live tailnet-only at `https://instance-20260702-1842.tail3548c0.ts.net:8446` (ping, mtr, DNS; public targets only; 6/min per client). Next: request tracer, paper-trading dashboard. Going public needs a domain and Tim's yes. |
 | 6 Portfolio | 🟡 partly | `README.md`, `docs/ARCHITECTURE.md` (Mermaid diagrams) and `.github/workflows/ci.yml` (terraform fmt/validate, ansible-lint, syntax check, gitleaks) done; checks pass locally/on the edge. The repo has **no remote**; creating a public GitHub repo needs Tim's yes after a secret scan. Live links and CV note wait for the demos. |
 
 ## Running right now
@@ -34,9 +34,9 @@ Safety rules (cost $0, never terminate without a backup and Tim's yes, no admin 
 
 Single-server plan (ADR-009): build everything on the edge; don't wait for the worker.
 
-1. ✅ Caddy role done. Pending check: Prometheus `caddy` target health (it had just started).
+1. ✅ Caddy role done; Prometheus scrapes it.
 2. **Domain** (Tim): unlocks Caddy TLS, `status.<domain>`, interactsh and the demos.
-3. **Demos on the edge, tailnet-first**: looking glass (`lg`) and request tracer (`trace`), then public behind Tim's yes.
+3. **Demos on the edge, tailnet-first**: ✅ looking glass. Next: request tracer (`trace`), paper-trading dashboard (`trading`, reads freqtrade's API server-side, never exposes it). New apps go in `apps/<name>/` + `apps_enabled` + a Caddy site + a `caddy_tailnet_ports` entry.
 4. **Recon pipeline** once scope files exist; interactsh once the domain exists.
 5. Restore drill; GitHub repo (Tim's yes); Ubuntu 20.04 upgrade (Tim's yes, fresh backup).
 
@@ -79,3 +79,4 @@ Single-server plan (ADR-009): build everything on the edge; don't wait for the w
 - 2026-11-05: Checked retry health: timer active, bot token valid, monitoring containers up, no alerts firing. Added this file.
 - 2026-11-11: Tim switched to the single-server plan (ADR-009). Retry extended to ~5 weeks with weekly notes. Added CI workflow, README and ARCHITECTURE.md. Verified public port 80 is closed.
 - 2026-11-11: Caddy + compose chosen. Boot volume backup `newLifeOS-pre-caddy-2026-11-11` (incremental) taken first. Caddy replaced nginx on :80; second Ansible run changed=0.
+- 2026-11-11: Looking glass app (`apps/lg`) deployed via new Ansible `apps` role behind Caddy :8091, Tailscale Serve :8446. Guardrails tested (private/metadata IPs, flags, rate limit). CI runs its unit tests. Ansible sync now copies `infra/ansible` + `apps` (RUNBOOK).

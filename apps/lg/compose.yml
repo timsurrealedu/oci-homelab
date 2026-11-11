@@ -1,0 +1,18 @@
+# Deployed by Ansible (roles/apps). Reached only through Caddy (127.0.0.1:8091 today, lg.<domain> later).
+name: lg
+
+services:
+  lg:
+    build: .
+    image: oci-homelab/lg:local
+    restart: unless-stopped
+    ports: ["127.0.0.1:8090:8090"]
+    environment:
+      LG_RATE_PER_MIN: "6"
+      LG_CONCURRENCY: "2"
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    pids_limit: 64

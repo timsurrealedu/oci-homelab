@@ -1,0 +1,19 @@
+# Copies each app from the repo and rebuilds it only when its files changed.
+- name: Copy app sources
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../apps/{{ item }}/"
+    dest: "{{ apps_dir }}/{{ item }}/"
+    mode: "0644"
+    directory_mode: "0755"
+  loop: "{{ apps_enabled }}"
+  register: apps_copy
+
+- name: Build and start changed apps  # noqa: no-handler (per-app rebuild; a handler would rebuild all)
+  ansible.builtin.command: docker compose up -d --build --remove-orphans
+  args:
+    chdir: "{{ apps_dir }}/{{ item.item }}"
+  loop: "{{ apps_copy.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.changed
+  changed_when: true

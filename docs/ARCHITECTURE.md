@@ -44,7 +44,9 @@ From the internet, only SSH answers today. Port 80/443 open publicly when Caddy 
 | Prometheus, Alertmanager, Grafana, Uptime Kuma | Docker compose, host network, 127.0.0.1 | Tailscale Serve :9090 :9093 :3000 :3002 |
 | Node exporter | systemd, :9100 | Private subnet + tailnet only |
 | freqtrade (dry-run) | Docker, API on 127.0.0.1:8080 | Local only |
-| smartStudent | nginx :80 + Node :3001 | Tailscale Serve :8443 (host firewall blocks public 80) |
+| Caddy (HTTP entry) | Docker, host network, :80 + 127.0.0.1:8091, admin/metrics 127.0.0.1:2019 | Public 80/443 closed until a domain exists |
+| smartStudent | Caddy :80 (static SPA) + Node :3001 | Tailscale Serve :8443 |
+| Looking glass (`apps/lg`) | Docker, 127.0.0.1:8090, behind Caddy :8091; NET_RAW only, read-only, 128 MB | Tailscale Serve :8446 |
 | readChinese | Next.js :3108 (pm2) | Tailscale Serve :8445 |
 | Syncthing (Obsidian Vault) | systemd, GUI 127.0.0.1:8384 | Sync port 22000 not open publicly (host firewall) |
 | Worker launch retry | systemd timer, instance principal, Telegram | Outbound only |

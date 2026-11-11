@@ -13,7 +13,8 @@
   roles:
     - monitoring
 
-- name: Public entry (Caddy)
+- name: Apps and public entry (Caddy)
   hosts: edge_hosts
   roles:
+    - apps
     - caddy

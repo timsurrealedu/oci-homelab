@@ -1,0 +1,3 @@
+apps_dir: /opt/oci-homelab/apps
+# Each name is a folder under the repo's apps/ with a compose.yml (and usually a Dockerfile).
+apps_enabled: [lg]

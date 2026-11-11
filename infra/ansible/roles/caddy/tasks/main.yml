@@ -36,3 +36,18 @@
     chdir: "{{ caddy_dir }}"
   register: caddy_up
   changed_when: caddy_up.stderr is search('Creat|Recreat|Start')
+
+- name: Read Tailscale Serve config
+  ansible.builtin.command: tailscale serve status --json
+  register: caddy_serve
+  changed_when: false
+  check_mode: false
+
+- name: Publish Caddy sites on the tailnet only (Tailscale Serve, HTTPS)
+  ansible.builtin.command: tailscale serve --bg --https={{ item.key }} http://127.0.0.1:{{ item.value }}
+  loop: "{{ caddy_tailnet_ports | dict2items }}"
+  loop_control:
+    label: ":{{ item.key }} -> 127.0.0.1:{{ item.value }}"
+  when: >-
+    (((caddy_serve.stdout | from_json).Web | default({})).keys() | select('search', ':' ~ item.key ~ '$') | list | length) == 0
+  changed_when: true

@@ -3,3 +3,7 @@ caddy_version: 2.11.2-alpine
 # Static sites served straight from the host (mounted read-only into the container).
 caddy_static_mounts:
   - {src: /home/ubuntu/smartStudent/frontend/dist, dest: /srv/smartstudent}
+# Tailnet-only HTTPS (Tailscale Serve): tailnet port -> local Caddy port.
+caddy_tailnet_ports:
+  8443: 80     # smartStudent
+  8446: 8091   # looking glass

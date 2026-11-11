@@ -7,7 +7,7 @@ Ansible doesn't run on native Windows. The control node is the edge: venv `/opt/
 Until the repo has a remote, push the tree from Windows:
 
 ```bash
-cd infra && tar -cf - ansible | ssh -i ~/.ssh/oracle_lifeos ubuntu@100.112.185.21 'rm -rf ~/oci-homelab/infra/ansible && tar -xf - -C ~/oci-homelab/infra'
+tar -cf - infra/ansible apps | ssh -i ~/.ssh/oracle_lifeos ubuntu@100.112.185.21 'rm -rf ~/oci-homelab/infra/ansible ~/oci-homelab/apps && tar -xf - -C ~/oci-homelab'
 ```
 
 On the edge:
