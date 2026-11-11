@@ -52,3 +52,9 @@ variable "tailscale_authkey" {
   default     = ""
   sensitive   = true
 }
+
+variable "edge_public_web" {
+  description = "Open 443 on nsg-edge for public Caddy sites (set true when going public)."
+  type        = bool
+  default     = false
+}

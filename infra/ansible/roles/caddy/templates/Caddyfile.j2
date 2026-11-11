@@ -1,0 +1,135 @@
+# Managed by Ansible (infra/ansible/roles/caddy/templates/Caddyfile.j2).
+# Two layers:
+#  - tailnet sites on 127.0.0.1:<port>, published by Tailscale Serve (always on)
+#  - public sites <name>.{{ public_domain or '<domain>' }}, only for names in public_sites (each needs timsurreal's yes)
+{% set public_domain = public_domain | default('') %}
+{% set public_sites = public_sites | default([]) %}
+{% set going_public = (public_domain | length > 0) and (public_sites | length > 0) %}
+{
+	admin 127.0.0.1:2019
+	metrics
+{% if going_public %}
+{% if caddy_acme_email %}
+	email {{ caddy_acme_email }}
+{% endif %}
+{% else %}
+	# No public sites yet: no certificates, nothing listens publicly.
+	auto_https off
+{% endif %}
+}
+
+# Demo pages (apps/<name>/public) + shared UI (/ui/); only /api/* reaches the app. Strict CSP: no inline code.
+(demo) {
+	encode zstd gzip
+	header {
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Cross-Origin-Opener-Policy "same-origin"
+		Cross-Origin-Resource-Policy "same-origin"
+		-Server
+	}
+	handle_path /ui/* {
+		root * /srv/apps/_ui
+		header Cache-Control "public, max-age=3600"
+		file_server
+	}
+	handle {
+		root * /srv/apps/{args[0]}/public
+		header Cache-Control "no-cache"
+		file_server
+	}
+}
+
+# Public requests must not carry identity headers that only Tailscale Serve may set.
+(no_tailscale_identity) {
+	request_header -Tailscale-User-Login
+	request_header -Tailscale-User-Name
+	request_header -Tailscale-User-Profile-Pic
+	request_header -Tailscale-Headers-Info
+}
+
+# smartStudent: SPA + API (ported from the old nginx site). Local only; Tailscale Serve :8443.
+:{{ caddy_smartstudent_port }} {
+	bind 127.0.0.1
+	encode gzip
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3001
+	}
+	handle /health {
+		reverse_proxy 127.0.0.1:3001
+	}
+	handle /sw.js {
+		root * /srv/smartstudent
+		header Cache-Control "no-cache, no-store, must-revalidate"
+		file_server
+	}
+	handle {
+		root * /srv/smartstudent
+		header Cache-Control "max-age=86400, public, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+}
+
+# /api/* to the app. The tracer variant stamps the forward time so the app can show the Caddy -> app hop.
+(api) {
+	handle /api/* {
+		reverse_proxy {args[0]}
+	}
+}
+(api_stamped) {
+	handle /api/* {
+		reverse_proxy {args[0]} {
+			header_up X-Trace-Caddy-In {time.now.unix_ms}
+		}
+	}
+}
+
+{% for name, app in caddy_apps.items() %}
+{% set api = 'api_stamped' if app.stamp | default(false) else 'api' %}
+# {{ app.title }} (apps/{{ name }}): tailnet via 127.0.0.1:{{ app.local }} + Tailscale Serve :{{ app.tailnet }}.
+:{{ app.local }} {
+	bind 127.0.0.1
+	import demo {{ name }}
+	import {{ api }} 127.0.0.1:{{ app.api }}
+}
+{% if going_public and name in public_sites %}
+{{ name }}.{{ public_domain }} {
+	import demo {{ name }}
+	import no_tailscale_identity
+	import {{ api }} 127.0.0.1:{{ app.api }}
+}
+{% endif %}
+
+{% endfor %}
+{% if going_public and 'status' in public_sites %}
+# Public status page: Uptime Kuma's status page only. Its admin UI (/dashboard, socket.io) is never exposed.
+status.{{ public_domain }} {
+	import no_tailscale_identity
+	encode zstd gzip
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+	@kuma path /status/* /api/status-page/* /api/badge/* /assets/* /upload/* /icon.svg /favicon.ico /manifest.json
+	handle @kuma {
+		reverse_proxy 127.0.0.1:3002
+	}
+	handle / {
+		redir * /status/{{ caddy_public_status_slug }} 302
+	}
+	handle {
+		respond 404
+	}
+}
+{% endif %}

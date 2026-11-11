@@ -1,6 +1,6 @@
 # Architecture
 
-State as of 2026-11-11: one server (**edge**) does everything. A second, private **worker** is declared in Terraform and launches automatically if Oracle frees A1 capacity (ADR-009).
+State as of 2026-11-11: one server (**edge**, Ubuntu 24.04 LTS) does everything. A second, private **worker** is declared in Terraform and launches automatically if Oracle frees A1 capacity (ADR-009).
 
 ## Network
 
@@ -45,7 +45,7 @@ From the internet, only SSH answers today. Port 80/443 open publicly when Caddy 
 | Node exporter | systemd, :9100 | Private subnet + tailnet only |
 | freqtrade (dry-run) | Docker, API on 127.0.0.1:8080 | Local only |
 | Caddy (HTTP entry) | Docker, host network, :80 + 127.0.0.1:8091, admin/metrics 127.0.0.1:2019 | Public 80/443 closed until a domain exists |
-| smartStudent | Caddy :80 (static SPA) + Node :3001 | Tailscale Serve :8443 |
+| smartStudent | Caddy 127.0.0.1:8097 (static SPA) + Node :3001 (systemd) | Tailscale Serve :8443 |
 | Looking glass (`apps/lg`) | Docker, 127.0.0.1:8090, behind Caddy :8091; NET_RAW only, read-only, 128 MB | Tailscale Serve :8446 |
 | Trading dashboard (`apps/trading`) | Docker (bridge + freqtrade's network, user nobody, no caps), 127.0.0.1:8092, behind Caddy :8093; reads freqtrade's API server-side with root-only credentials, whitelists fields, refuses non-dry-run | Tailscale Serve :8447 |
 | Request tracer (`apps/trace`) | Docker (bridge, user nobody, no caps), 127.0.0.1:8094, behind Caddy :8095 which stamps `X-Trace-Caddy-In`; background probes to fixed targets (internet, GitHub, worker) | Tailscale Serve :8448 |

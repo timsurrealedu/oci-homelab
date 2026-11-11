@@ -9,7 +9,7 @@
 -A INPUT -p icmp -j ACCEPT
 -A INPUT -i lo -j ACCEPT
 {% for r in firewall_rules %}
--A INPUT{% if r.iface is defined %} -i {{ r.iface }}{% endif %}{% if r.src is defined %} -s {{ r.src }}{% endif %}{% if r.port is defined %} -p tcp -m conntrack --ctstate NEW -m tcp --dport {{ r.port }}{% endif %} -m comment --comment "{{ r.comment }}" -j ACCEPT
+-A INPUT{% if r.iface is defined %} -i {{ r.iface }}{% endif %}{% if r.src is defined %} -s {{ r.src }}{% endif %}{% if r.port is defined %} -p tcp -m tcp --dport {{ r.port }} -m conntrack --ctstate NEW{% endif %} -m comment --comment "{{ r.comment }}" -j ACCEPT
 {% endfor %}
 -A INPUT -j REJECT --reject-with icmp-host-prohibited
 -A FORWARD -j REJECT --reject-with icmp-host-prohibited

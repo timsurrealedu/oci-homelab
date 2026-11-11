@@ -4,9 +4,20 @@ caddy_version: 2.11.2-alpine
 caddy_static_mounts:
   - {src: /home/ubuntu/smartStudent/frontend/dist, dest: /srv/smartstudent}
   - {src: /opt/oci-homelab/apps, dest: /srv/apps}   # demo pages (apps/*/public) and the shared UI (apps/_ui)
+
+# Demos: app API port, local Caddy port (tailnet layer) and the Tailscale Serve HTTPS port.
+caddy_apps:
+  lg: {title: Looking glass, api: 8090, local: 8091, tailnet: 8446}
+  trading: {title: Paper-trading dashboard, api: 8092, local: 8093, tailnet: 8447}
+  trace: {title: Request tracer, api: 8094, local: 8095, tailnet: 8448, stamp: true}
+caddy_smartstudent_port: 8097
+
 # Tailnet-only HTTPS (Tailscale Serve): tailnet port -> local Caddy port.
-caddy_tailnet_ports:
-  8443: 80     # smartStudent
-  8446: 8091   # looking glass
-  8447: 8093   # trading dashboard
-  8448: 8095   # request tracer
+caddy_tailnet_ports: >-
+  {{ {8443: caddy_smartstudent_port}
+     | combine(dict(caddy_apps.values() | map(attribute='tailnet') | zip(caddy_apps.values() | map(attribute='local')))) }}
+
+# Going public (docs/RUNBOOK.md "Going public"): public_domain and public_sites live in host_vars/edge.yml,
+# shared with the firewall role. Empty/undefined means tailnet-only.
+caddy_public_status_slug: homelab
+caddy_acme_email: ""      # optional: Let's Encrypt expiry notices

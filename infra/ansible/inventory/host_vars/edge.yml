@@ -1,6 +1,9 @@
 # Inbound on top of the always-on rules (established, icmp, lo, tailscale0).
 # Keep in sync with nsg-edge / the public security list in infra/terraform.
-firewall_public_tcp: [22]  # break-glass SSH; Caddy adds 80/443 in Phase 3
+# Going public: set a domain and list the sites (each one needs timsurreal's yes). See docs/RUNBOOK.md.
+public_domain: ""
+public_sites: []   # lg, trading, trace, status
+firewall_public_tcp: "{{ [22] + ([80, 443] if (public_domain and public_sites) else []) }}"  # SSH always; web only when public
 firewall_allow_from:
   - {src: 10.0.1.0/24, port: 9100}  # worker's Prometheus -> node exporter
 tailscale_advertise_routes: [10.0.0.0/16]

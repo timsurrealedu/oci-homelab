@@ -60,3 +60,9 @@ Short ADRs. Newest last.
 **Context.** Each demo served its own HTML from Python with inline CSS/JS. That blocked a strict CSP, duplicated styling, and the three pages looked unrelated.
 **Decision.** Caddy serves `apps/<name>/public/` and a shared `apps/_ui/` (gruvbox tokens for light and dark, VT323 display + IBM Plex Mono body, self-hosted under the OFL, no third-party requests). The apps only answer `/api/*`. Chart series colour is gruvbox orange (`#d65d0e` dark, `#af3a03` light), the accents that pass the dataviz palette checks on gruvbox surfaces; gruvbox blue reads as gray. Motion: staggered panel rise, line-by-line terminal output, chart draw-on, the tracer's packet; all off under `prefers-reduced-motion`.
 **Why.** One look across the platform, a strict CSP (`default-src 'self'`), and no visitor data sent to font CDNs.
+
+## ADR-011: In-place Ubuntu upgrade 20.04 -> 22.04 -> 24.04 (2026-11-11)
+
+**Context.** The edge ran Ubuntu 20.04, past standard support. Rebuilding the only server risks A1 capacity (a terminated instance may not come back) and the data on it.
+**Decision.** Upgrade in place, one LTS at a time, after a verified restore drill and a fresh boot volume backup. Run `do-release-upgrade` as a transient systemd unit so an SSH/Tailscale drop can't kill it. Re-render `rules.v4` from the `firewall` role before each reboot (the upgrade replaced it both times). Now on 24.04 LTS (kernel 7.0 oracle), supported to 2029.
+**Also.** smartStudent moved from Caddy `:80` to `127.0.0.1:8097` so no service answers on port 80 until public sites exist; the firewall template now writes rules in the same form the `iptables` module inserts them, so reboots don't leave duplicates.

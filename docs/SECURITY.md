@@ -31,3 +31,9 @@ Scope: the three demos (`apps/lg`, `apps/trading`, `apps/trace`), Caddy, the hos
 - smartStudent's backend (`0.0.0.0:3001`) and readChinese (`*:3108`) bind all interfaces; the host firewall blocks them. Binding them to 127.0.0.1 is a change in those apps.
 - GitHub Actions are pinned by tag, not commit SHA. Pin by SHA before accepting outside contributions.
 - When demos go public: strip `Tailscale-User-*` request headers on public sites (only cosmetic for the tracer today), and add `trusted_proxies` if Cloudflare proxying is turned on.
+
+### 2026-11-11 update
+
+- Ubuntu 20.04 (past standard support) upgraded in place to 24.04 LTS (ADR-011). During the upgrade the firewall's boot file was replaced; caught before reboot and re-rendered (see RUNBOOK). Public exposure verified after each reboot: only SSH answers.
+- Public mode strips `Tailscale-User-*` / `Tailscale-Headers-Info` request headers on public sites, and the public status site proxies only Uptime Kuma's status-page paths.
+- Nothing listens on port 80 until a public site exists (smartStudent moved to `127.0.0.1:8097`).

@@ -7,6 +7,22 @@ resource "oci_core_network_security_group" "edge" {
 }
 
 # Public HTTP to Caddy. 443 (Caddy) and 53 (interactsh) get added in Phases 3-4, when something listens.
+resource "oci_core_network_security_group_security_rule" "edge_https" {
+  count                     = var.edge_public_web ? 1 : 0
+  network_security_group_id = oci_core_network_security_group.edge.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = "0.0.0.0/0"
+  source_type               = "CIDR_BLOCK"
+  description               = "HTTPS to Caddy (public sites)"
+  tcp_options {
+    destination_port_range {
+      min = 443
+      max = 443
+    }
+  }
+}
+
 resource "oci_core_network_security_group_security_rule" "edge_http" {
   network_security_group_id = oci_core_network_security_group.edge.id
   direction                 = "INGRESS"
