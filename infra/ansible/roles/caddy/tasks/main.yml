@@ -1,0 +1,38 @@
+- name: Create Caddy directories
+  ansible.builtin.file:
+    path: "{{ caddy_dir }}/conf"
+    state: directory
+    mode: "0755"
+
+- name: Render compose file
+  ansible.builtin.template:
+    src: compose.yml.j2
+    dest: "{{ caddy_dir }}/compose.yml"
+    mode: "0644"
+  notify: Recreate caddy
+
+- name: Install Caddyfile (validated by the same Caddy version)
+  ansible.builtin.copy:
+    src: Caddyfile
+    dest: "{{ caddy_dir }}/conf/Caddyfile"
+    mode: "0644"
+    validate: >-
+      docker run --rm --network none -v %s:/tmp/Caddyfile:ro caddy:{{ caddy_version }}
+      caddy validate --config /tmp/Caddyfile --adapter caddyfile
+  notify: Reload caddy
+
+# Caddy takes over :80 from the host nginx that used to serve smartStudent.
+# nginx stays installed (config untouched) so rollback is: stop caddy, start nginx.
+- name: Stop and disable host nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: stopped
+    enabled: false
+  failed_when: false
+
+- name: Start Caddy
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: "{{ caddy_dir }}"
+  register: caddy_up
+  changed_when: caddy_up.stderr is search('Creat|Recreat|Start')

@@ -12,3 +12,8 @@
   hosts: monitoring_hosts
   roles:
     - monitoring
+
+- name: Public entry (Caddy)
+  hosts: edge_hosts
+  roles:
+    - caddy

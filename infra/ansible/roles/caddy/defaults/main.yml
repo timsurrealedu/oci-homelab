@@ -1,0 +1,5 @@
+caddy_dir: /opt/oci-homelab/caddy
+caddy_version: 2.11.2-alpine
+# Static sites served straight from the host (mounted read-only into the container).
+caddy_static_mounts:
+  - {src: /home/ubuntu/smartStudent/frontend/dist, dest: /srv/smartstudent}

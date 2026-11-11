@@ -1,0 +1,21 @@
+# Managed by Ansible (infra/ansible/roles/caddy).
+# The single entry point for HTTP. Host networking so it reaches services on 127.0.0.1;
+# the admin API and metrics stay on 127.0.0.1:2019.
+name: caddy
+
+services:
+  caddy:
+    image: caddy:{{ caddy_version }}
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./conf:/etc/caddy:ro
+{% for m in caddy_static_mounts %}
+      - {{ m.src }}:{{ m.dest }}:ro
+{% endfor %}
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  caddy-data:
+  caddy-config:

@@ -16,7 +16,7 @@ Safety rules (cost $0, never terminate without a backup and Tim's yes, no admin 
 | 0 Audit and safety net | ✅ done | Inventory in `docs/inventory-2026-11.md`. Old pm2 apps (lifeOS, noema...) decommissioned at Tim's request. Boot volume backup taken. |
 | 1 IaC foundation | ✅ done | Terraform (`infra/terraform/`) imports the VCN, gateways, subnets and edge; adds NSGs. Edge shrunk in place to 1 OCPU / 6 GB. Worker declared but waiting on A1 capacity; **plan is now single-server** (ADR-009). |
 | 2 Server baseline | ✅ done on the edge | Ansible (`infra/ansible/`, run *from the edge*). Worker gets the same baseline once it exists. Tailscale ACL drafted, not applied (Tim's step). |
-| 3 Platform | 🟡 partly | Monitoring is live on the edge (tailnet-only). Next: deploy platform on the edge (Coolify vs plain Caddy + compose, Tim to choose; measured 4.3 GB RAM free, 14 GB disk free), public entry and status page (need a domain). freqtrade stays on the edge. |
+| 3 Platform | 🟡 partly | Monitoring is live on the edge (tailnet-only). Deploy platform = Caddy + compose via Ansible (Tim's pick, 2026-11-11): role `caddy` runs Caddy 2.11.2 on :80 (host nginx stopped, config kept for rollback), serves smartStudent with identical responses, metrics scraped by Prometheus. Public 80/443 stay closed until a domain + Tim's yes; then drop `auto_https off` and open the firewall. freqtrade stays on the edge. |
 | 4 Recon platform | ⬜ not started | Needs a domain (interactsh NS delegation) and Tim's scope files. |
 | 5 Public demos | ⬜ not started | Needs the worker, Caddy and a domain. Every demo needs Tim's yes before going public. |
 | 6 Portfolio | 🟡 partly | `README.md`, `docs/ARCHITECTURE.md` (Mermaid diagrams) and `.github/workflows/ci.yml` (terraform fmt/validate, ansible-lint, syntax check, gitleaks) done; checks pass locally/on the edge. The repo has **no remote**; creating a public GitHub repo needs Tim's yes after a secret scan. Live links and CV note wait for the demos. |
@@ -34,7 +34,7 @@ Safety rules (cost $0, never terminate without a backup and Tim's yes, no admin 
 
 Single-server plan (ADR-009): build everything on the edge; don't wait for the worker.
 
-1. **Deploy platform on the edge**: Tim picks Coolify (PaaS UI, ~1-1.5 GB RAM, its proxy takes 80/443 so smartStudent's nginx must move behind it) or plain Caddy + compose via Ansible (lighter, everything in git). Take a fresh boot volume backup first.
+1. ✅ Caddy role done. Pending check: Prometheus `caddy` target health (it had just started).
 2. **Domain** (Tim): unlocks Caddy TLS, `status.<domain>`, interactsh and the demos.
 3. **Demos on the edge, tailnet-first**: looking glass (`lg`) and request tracer (`trace`), then public behind Tim's yes.
 4. **Recon pipeline** once scope files exist; interactsh once the domain exists.
@@ -78,3 +78,4 @@ Single-server plan (ADR-009): build everything on the edge; don't wait for the w
 - 2026-11-04: Retry stopped once on a spurious `LimitExceeded` (attempt 47). Script fixed and restarted, `e264b02`.
 - 2026-11-05: Checked retry health: timer active, bot token valid, monitoring containers up, no alerts firing. Added this file.
 - 2026-11-11: Tim switched to the single-server plan (ADR-009). Retry extended to ~5 weeks with weekly notes. Added CI workflow, README and ARCHITECTURE.md. Verified public port 80 is closed.
+- 2026-11-11: Caddy + compose chosen. Boot volume backup `newLifeOS-pre-caddy-2026-11-11` (incremental) taken first. Caddy replaced nginx on :80; second Ansible run changed=0.
