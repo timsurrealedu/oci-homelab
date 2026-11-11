@@ -41,8 +41,8 @@ elif grep -q '"LimitExceeded"' <<<"$out"; then
 elif grep -qiE 'out of host capacity|TooManyRequests|InternalError' <<<"$out"; then
   rm -f "$D/limit_streak"
   echo "attempt $n: capacity/transient: $(tr -s '\n ' ' ' <<<"$out" | grep -oE '"(code|message)": "[^"]*"' | tr '\n' ' ' | cut -c1-200)"
-  [ $((n % 288)) -eq 0 ] && notify "⏳ oci-homelab: still no A1 capacity in Batam ($n attempts so far)."
-  [ "$n" -ge "$MAX_ATTEMPTS" ] && finish "🛑 oci-homelab: gave up on the worker after $n attempts (7 days). Timer stopped."
+  [ $((n % 2016)) -eq 0 ] && notify "⏳ oci-homelab: still no A1 capacity in Batam ($n attempts so far, weekly note)."
+  [ "$n" -ge "$MAX_ATTEMPTS" ] && finish "🛑 oci-homelab: gave up on the worker after $n attempts (about 5 weeks). Timer stopped."
 else
   finish "⚠️ oci-homelab worker retry stopped on an unexpected error (attempt $n): ${out:0:500}"
 fi

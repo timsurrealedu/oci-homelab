@@ -47,3 +47,10 @@ Short ADRs. Newest last.
 **Context.** The target design puts monitoring on the worker, but the worker is waiting on capacity, and the edge's memory was under the 20% reclamation line with ~5 days left.
 **Decision.** Run Prometheus, Alertmanager, Grafana and Uptime Kuma on the edge as one compose project (Ansible role `monitoring`, host group `monitoring_hosts`). Host networking with every listener on `127.0.0.1`. The UIs are published only through **Tailscale Serve** (`https://instance-20260702-1842.tail3548c0.ts.net:{3000,3002,9090,9093}`, tailnet-only, real TLS). Alerts go to Telegram via Alertmanager's native receiver, with the bot token in a root-owned secrets file (`bot_token_file`), never in the repo.
 **Why.** Real workloads the platform needs anyway (not a memory balloon). Serve avoids binding Docker to the tailnet IP, which fails if tailscaled starts after Docker at boot. Moving to the worker later means changing the `monitoring_hosts` group and adding `10.0.0.165:9100` as a scrape target.
+
+## ADR-009: Build on one server; keep the worker as a bonus (2026-11-11)
+
+**Context.** A week of launch attempts (about 1,800) all hit "Out of host capacity" in ap-batam-1. Waiting blocks every later phase.
+**Decision.** Tim's call: the platform is built on the edge alone. Everything the PRD put on the worker (deploy platform, freqtrade, recon jobs, demo backends) runs on the edge for now. The retry timer keeps going (limit raised to 10,500 attempts, about 5 weeks from 2026-11-04; the ⏳ note is now weekly). The edge stays at 1 OCPU / 6 GB so the worker still fits the free quota if a launch succeeds.
+**If the worker arrives.** Import it (ADR-006), run the Ansible baseline, then move the heavy or risky workloads (recon, stewie rendering, freqtrade) to it by changing inventory groups. Services are written host-agnostic (compose + Ansible roles keyed by groups) so this is a move, not a rewrite.
+**Trade-off.** One box means public traffic and private workloads share a kernel; the NSG, host firewall and localhost/Tailscale-only admin binds carry more of the weight.
