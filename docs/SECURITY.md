@@ -37,3 +37,9 @@ Scope: the three demos (`apps/lg`, `apps/trading`, `apps/trace`), Caddy, the hos
 - Ubuntu 20.04 (past standard support) upgraded in place to 24.04 LTS (ADR-011). During the upgrade the firewall's boot file was replaced; caught before reboot and re-rendered (see RUNBOOK). Public exposure verified after each reboot: only SSH answers.
 - Public mode strips `Tailscale-User-*` / `Tailscale-Headers-Info` request headers on public sites, and the public status site proxies only Uptime Kuma's status-page paths.
 - Nothing listens on port 80 until a public site exists (smartStudent moved to `127.0.0.1:8097`).
+
+### Publishing the repo (2026-11-11)
+
+- Full history scanned with gitleaks before the first push; CI rescans every push.
+- Personal email addresses removed from all history (commit author and the Tailscale policy). Before applying `infra/tailscale/policy.hujson`, replace `you@example.com` with the real login.
+- Deliberately left in: OCIDs, the edge's public IP and the tailnet hostname. OCIDs are identifiers, not credentials (API calls still need the private key); the IP answers only key-based SSH; tailnet hostnames already appear in certificate transparency logs because Tailscale Serve uses public certificates.

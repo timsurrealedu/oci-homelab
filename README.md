@@ -2,7 +2,7 @@
 
 A small, production-style platform on Oracle Cloud's **Always Free** tier (ap-batam-1, Indonesia), built as code and run for **$0/month**.
 
-> Status (2026-11): infrastructure, server baseline and monitoring are live. Public demos come next. A second private server is declared and launches automatically when Oracle frees capacity.
+> Status (2026-11): one server runs everything: Terraform-managed network, a hardened Ubuntu 24.04 baseline, monitoring and three demos (tailnet-only for now). A second private server is declared and launches automatically when Oracle frees capacity.
 
 ## What it shows
 
@@ -11,6 +11,7 @@ A small, production-style platform on Oracle Cloud's **Always Free** tier (ap-ba
 - **Security by default.** Only SSH (keys only) answers from the internet. No admin UI on a public port. Secrets live outside git, and CI scans the full history with gitleaks.
 - **Reviewed security.** A recorded review ([docs/SECURITY.md](docs/SECURITY.md)) probed the demos for SSRF bypasses, header injection, traversal and container escape paths; findings were fixed and regression-tested.
 - **Observability.** Prometheus, Alertmanager, Grafana and Uptime Kuma, with Telegram alerts. One alert watches Oracle's idle-reclamation rule so the free server isn't taken back.
+- **Operations, not just setup.** A restore drill proved the backups work (restored, mounted read-only, verified, cleaned up), and the only server was upgraded in place from Ubuntu 20.04 to 24.04, including catching an upgrade that silently replaced the firewall's boot rules ([runbook](docs/RUNBOOK.md), [ADR-011](docs/DECISIONS.md)).
 - **Operating under constraints.** The free tier caps ARM compute at 2 OCPU / 12 GB, so the existing server was shrunk in place. The second server's launch is retried from the first one using a launch-only instance-principal policy, with Telegram notifications ([ADR-006](docs/DECISIONS.md)).
 
 ## Architecture
@@ -31,12 +32,13 @@ Full picture, firewall layers and service list: [`docs/ARCHITECTURE.md`](docs/AR
 
 ## Stack
 
-Oracle Cloud (A1 Flex ARM, VCN, NSGs, NAT gateway) · Terraform · Ansible · Docker Compose · Tailscale · Prometheus · Alertmanager · Grafana · Uptime Kuma · GitHub Actions · gitleaks
+Oracle Cloud (A1 Flex ARM, VCN, NSGs, NAT gateway) · Terraform · Ansible · Docker Compose · Caddy · Tailscale · Prometheus · Alertmanager · Grafana · Uptime Kuma · GitHub Actions · gitleaks
 
 ## Repository
 
 | Path | What |
 |---|---|
+| `apps/` | The three demos (stdlib Python backends, static pages, shared retro UI) |
 | `infra/terraform/` | Network, NSGs and both instances |
 | `infra/ansible/` | Server roles and the monitoring stack |
 | `infra/worker-retry/` | systemd timer that keeps trying to launch the worker |
@@ -56,8 +58,13 @@ Oracle Cloud (A1 Flex ARM, VCN, NSGs, NAT gateway) · Terraform · Ansible · Do
 - [ ] Self-hosted interactsh and a scope-limited recon pipeline for bug bounty
 - [x] Paper-trading dashboard (equity curve, trades) from freqtrade via a read-only, field-whitelisting backend, tailnet-only for now
 - [x] Request tracer: follows the visitor's own request hop by hop (entry path, Caddy, container) with live timings and the edge's paths to the internet and the private worker, tailnet-only for now
-- [ ] Restore drill from backup
+- [x] Restore drill from backup
+- [x] In-place Ubuntu 20.04 → 22.04 → 24.04 upgrade of the only server
 
 ## Cost
 
 $0. Every resource sits inside the Always Free limits (2 ARM OCPU / 12 GB, 200 GB block storage, 5 volume backups), checked after each change.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Fonts in `apps/_ui/fonts/` are under the SIL Open Font License (texts alongside).

@@ -19,7 +19,7 @@ Safety rules (cost $0, never terminate without a backup and timsurreal's yes, no
 | 3 Platform | 🟡 partly | Monitoring is live on the edge (tailnet-only). Deploy platform = Caddy + compose via Ansible (timsurreal's pick, 2026-11-11): role `caddy` runs Caddy 2.11.2 on :80 (host nginx stopped, config kept for rollback), serves smartStudent with identical responses, metrics scraped by Prometheus. Public 80/443 stay closed until a domain + timsurreal's yes; then drop `auto_https off` and open the firewall. freqtrade stays on the edge. |
 | 4 Recon platform | ⬜ not started | Needs a domain (interactsh NS delegation) and timsurreal's scope files. |
 | 5 Public demos | 🟡 started | **Looking glass** (`apps/lg`) live tailnet-only at `https://instance-20260702-1842.tail3548c0.ts.net:8446` (ping, mtr, DNS; public targets only; 6/min per client). **Trading dashboard** (`apps/trading`) live tailnet-only at `:8447` (paper results: −21.5% over 101 trades, last trade 2026-11-04; timsurreal to decide if a losing strategy goes public). **Request tracer** (`apps/trace`) live tailnet-only at `:8448`. All three planned demos built; going public needs a domain and timsurreal's yes. Stewie (video generator) not started. |
-| 6 Portfolio | 🟡 partly | `README.md`, `docs/ARCHITECTURE.md` (Mermaid diagrams) and `.github/workflows/ci.yml` (terraform fmt/validate, ansible-lint, syntax check, gitleaks) done; checks pass locally/on the edge. The repo has **no remote**; creating a public GitHub repo needs timsurreal's yes after a secret scan. Live links and CV note wait for the demos. |
+| 6 Portfolio | 🟡 partly | `README.md`, `docs/ARCHITECTURE.md` (Mermaid diagrams) and `.github/workflows/ci.yml` (terraform fmt/validate, ansible-lint, syntax check, gitleaks) done; checks pass locally/on the edge. **Public on GitHub** (https://github.com/timsurrealedu/oci-homelab, 2026-11-11) after a full-history gitleaks scan; history rewritten first so commits use the GitHub noreply address and the Tailscale policy holds a placeholder login. Live links wait for a domain. |
 
 ## Running right now
 
@@ -38,7 +38,7 @@ Single-server plan (ADR-009): build everything on the edge; don't wait for the w
 2. **Domain** (timsurreal): unlocks Caddy TLS, `status.<domain>`, interactsh and the demos.
 3. **Demos on the edge, tailnet-first**: ✅ looking glass. ✅ trading dashboard. ✅ request tracer. When the worker arrives, the tracer's worker probe turns green automatically. New apps go in `apps/<name>/` + `apps_enabled` + a Caddy site + a `caddy_tailnet_ports` entry.
 4. **Recon pipeline** once scope files exist; interactsh once the domain exists.
-5. GitHub repo (timsurreal's yes). (Restore drill and Ubuntu upgrade: done 2026-11-11.)
+5. (Done 2026-11-11: restore drill, Ubuntu upgrade, public GitHub repo.)
 
 **Whenever Telegram says 🎉 (worker launched)**:
    - On Windows, in `infra/terraform/`: `terraform import oci_core_instance.worker <ocid>`, then `terraform plan` must show no changes to the worker.
@@ -83,3 +83,4 @@ Single-server plan (ADR-009): build everything on the edge; don't wait for the w
 - 2026-11-11: Request tracer (`apps/trace`) deployed: Caddy :8095 stamps forward time, app reports Server-Timing, browser derives network time; probes refresh in a background thread. Serve :8448. Unit tests in CI.
 - 2026-11-11: Security review (`docs/SECURITY.md`): fixed NAT64 SSRF gap (IPv4-only targets), moved trading off host networking, strict CSP + security headers on demos, disabled rpcbind. Unified retro-gruvbox UI for all demos (ADR-010): Caddy serves static pages + `/ui/`, apps serve `/api/*` only.
 - 2026-11-11: Restore drill passed (backup restored, mounted read-only, configs/vault/trading DB verified, temp volume deleted). Fresh backup, then Ubuntu 20.04 -> 22.04 -> 24.04 in place (ADR-011); fixed rules.v4 rewrite, Prisma OpenSSL 3 engine, Tailscale repo. Going public prepared in code (RUNBOOK "Going public"); smartStudent moved to 127.0.0.1:8097. Cost $0, 4/5 backups.
+- 2026-11-11: Published https://github.com/timsurrealedu/oci-homelab (public, MIT). History rewritten with git-filter-repo (author email -> GitHub noreply, Gmail in `policy.hujson` -> `you@example.com`); the pre-rewrite history is kept only locally as `refs/backup/pre-public-rewrite` (never push it). Repo-local `user.email` is the noreply address.
