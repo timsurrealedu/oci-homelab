@@ -48,11 +48,13 @@ Errors: "Out of host capacity", TooManyRequests and InternalError retry silently
 - Test the alert path: POST a synthetic alert to `127.0.0.1:9093/api/v2/alerts` (see the Phase 3 notes) and check `alertmanager_notifications_total{integration="telegram"}`.
 - Adding the worker: append `{target: 10.0.1.10:9100, name: worker}` to `monitoring_node_targets`.
 
-## Going public (when a domain exists)
+## Going public
 
-Everything is prepared in code; nothing is public until these steps run. Each site needs timsurreal's yes first.
+**Live since 2026-11-12 on sslip.io names (ADR-012):** `lg.`, `trace.`, `trading.168-110-202-46.sslip.io` (`public_domain` / `public_sites` in `host_vars/edge.yml`, `edge_public_web = true` in the git-ignored `terraform.tfvars`). When a real domain arrives, change `public_domain`, point the A records at the edge IP and re-run Ansible; the sslip.io certs stop being used. Targeted Terraform applies (`-target`) keep the pending worker from launching as a side effect.
 
-1. DNS: point `lg.`, `trading.`, `trace.`, `status.<domain>` (A records) at the edge's public IP `168.110.202.46`. DNS-only (no Cloudflare proxy) unless `trusted_proxies` is added to Caddy.
+Generic steps (each site needs timsurreal's yes first):
+
+1. DNS (skip for sslip.io): point `lg.`, `trading.`, `trace.`, `status.<domain>` (A records) at the edge's public IP `168.110.202.46`. DNS-only (no Cloudflare proxy) unless `trusted_proxies` is added to Caddy.
 2. `infra/terraform`: set `edge_public_web = true` in `terraform.tfvars`, `terraform plan` (expect one new rule: 443 on `nsg-edge`), then apply.
 3. `infra/ansible/inventory/host_vars/edge.yml`: set `public_domain: <domain>` and `public_sites: [lg, ...]` (only the approved ones). The firewall opens 80/443 automatically when both are set.
 4. Sync and run `site.yml`. Caddy gets Let's Encrypt certificates on first request. Check `https://<site>.<domain>` from outside the tailnet.

@@ -2,13 +2,23 @@
 
 A small, production-style platform on Oracle Cloud's **Always Free** tier (ap-batam-1, Indonesia), built as code and run for **$0/month**.
 
-> Status (2026-11): one server runs everything: Terraform-managed network, a hardened Ubuntu 24.04 baseline, monitoring and three demos (tailnet-only for now). A second private server is declared and launches automatically when Oracle frees capacity.
+> Status (2026-11): one server runs everything: Terraform-managed network, a hardened Ubuntu 24.04 baseline, monitoring and three live demos. A second private server is declared and launches automatically when Oracle frees capacity.
+
+## Live demos
+
+Real HTTPS (Let's Encrypt via Caddy) on the server's public IP, using free [sslip.io](https://sslip.io) names until a domain is chosen:
+
+| Demo | Link |
+|---|---|
+| Network looking glass (ping, mtr, DNS from Oracle's Indonesia region) | https://lg.168-110-202-46.sslip.io |
+| Request tracer (your request, hop by hop, with real timings) | https://trace.168-110-202-46.sslip.io |
+| Paper-trading dashboard (dry-run bot, not advice) | https://trading.168-110-202-46.sslip.io |
 
 ## What it shows
 
 - **Infrastructure as code.** Terraform imports a hand-built VCN and server without recreating them, then adds a private subnet, NAT and service gateways, and per-role network security groups. Ansible configures the server idempotently.
 - **Network design.** Public and private subnets, a worker reachable only from the edge's NSG, and a Tailscale overlay as the only path to admin interfaces.
-- **Security by default.** Only SSH (keys only) answers from the internet. No admin UI on a public port. Secrets live outside git, and CI scans the full history with gitleaks.
+- **Security by default.** Only SSH (keys only) and HTTP/HTTPS for the three approved demos answer from the internet. No admin UI on a public port. Secrets live outside git, and CI scans the full history with gitleaks.
 - **Reviewed security.** A recorded review ([docs/SECURITY.md](docs/SECURITY.md)) probed the demos for SSRF bypasses, header injection, traversal and container escape paths; findings were fixed and regression-tested.
 - **Observability.** Prometheus, Alertmanager, Grafana and Uptime Kuma, with Telegram alerts. One alert watches Oracle's idle-reclamation rule so the free server isn't taken back.
 - **Operations, not just setup.** A restore drill proved the backups work (restored, mounted read-only, verified, cleaned up), and the only server was upgraded in place from Ubuntu 20.04 to 24.04, including catching an upgrade that silently replaced the firewall's boot rules ([runbook](docs/RUNBOOK.md), [ADR-011](docs/DECISIONS.md)).
@@ -18,7 +28,7 @@ A small, production-style platform on Oracle Cloud's **Always Free** tier (ap-ba
 
 ```mermaid
 flowchart LR
-  internet((Internet)) -- "SSH only (today)" --> edge
+  internet((Internet)) -- "SSH, HTTPS (demos)" --> edge
   you[Admin devices] -. Tailscale .-> edge
   subgraph vcn["VCN 10.0.0.0/16"]
     edge["edge (public subnet)<br/>monitoring, apps, Ansible"]
@@ -53,11 +63,12 @@ Oracle Cloud (A1 Flex ARM, VCN, NSGs, NAT gateway) · Terraform · Ansible · Do
 - [x] Monitoring and Telegram alerting
 - [x] CI: Terraform, Ansible lint, secret scan
 - [x] Caddy as the single HTTP entry point (Ansible-managed)
-- [x] Network looking glass (ping, mtr, DNS from the Oracle server) with target validation and rate limits, tailnet-only for now
-- [ ] Domain, public HTTPS and a public status page
+- [x] Network looking glass (ping, mtr, DNS from the Oracle server) with target validation and rate limits, public
+- [x] Public HTTPS on sslip.io names
+- [ ] Own domain and a public status page
 - [ ] Self-hosted interactsh and a scope-limited recon pipeline for bug bounty
-- [x] Paper-trading dashboard (equity curve, trades) from freqtrade via a read-only, field-whitelisting backend, tailnet-only for now
-- [x] Request tracer: follows the visitor's own request hop by hop (entry path, Caddy, container) with live timings and the edge's paths to the internet and the private worker, tailnet-only for now
+- [x] Paper-trading dashboard (equity curve, trades) from freqtrade via a read-only, field-whitelisting backend, public (paper money)
+- [x] Request tracer: follows the visitor's own request hop by hop (entry path, Caddy, container) with live timings and the edge's paths to the internet and the private worker, public
 - [x] Restore drill from backup
 - [x] In-place Ubuntu 20.04 → 22.04 → 24.04 upgrade of the only server
 

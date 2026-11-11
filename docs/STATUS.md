@@ -1,6 +1,6 @@
 # Status and handoff
 
-Where the project stands, what is running, and what to do next. **Update this file at the end of every work session.** Last updated 2026-11-11.
+Where the project stands, what is running, and what to do next. **Update this file at the end of every work session.** Last updated 2026-11-12.
 
 ## The goal
 
@@ -18,7 +18,7 @@ Safety rules (cost $0, never terminate without a backup and timsurreal's yes, no
 | 2 Server baseline | ✅ done on the edge | Ansible (`infra/ansible/`, run *from the edge*). Worker gets the same baseline once it exists. Tailscale ACL drafted, not applied (timsurreal's step). |
 | 3 Platform | 🟡 partly | Monitoring is live on the edge (tailnet-only). Deploy platform = Caddy + compose via Ansible (timsurreal's pick, 2026-11-11): role `caddy` runs Caddy 2.11.2 on :80 (host nginx stopped, config kept for rollback), serves smartStudent with identical responses, metrics scraped by Prometheus. Public 80/443 stay closed until a domain + timsurreal's yes; then drop `auto_https off` and open the firewall. freqtrade stays on the edge. |
 | 4 Recon platform | ⬜ not started | Needs a domain (interactsh NS delegation) and timsurreal's scope files. |
-| 5 Public demos | 🟡 started | **Looking glass** (`apps/lg`) live tailnet-only at `https://instance-20260702-1842.tail3548c0.ts.net:8446` (ping, mtr, DNS; public targets only; 6/min per client). **Trading dashboard** (`apps/trading`) live tailnet-only at `:8447` (paper results: −21.5% over 101 trades, last trade 2026-11-04; timsurreal to decide if a losing strategy goes public). **Request tracer** (`apps/trace`) live tailnet-only at `:8448`. All three planned demos built; going public needs a domain and timsurreal's yes. Stewie (video generator) not started. |
+| 5 Public demos | 🟡 started | **Looking glass** (`apps/lg`) live tailnet-only at `https://instance-20260702-1842.tail3548c0.ts.net:8446` (ping, mtr, DNS; public targets only; 6/min per client). **Trading dashboard** (`apps/trading`) live tailnet-only at `:8447` (paper results: −21.5% over 101 trades, last trade 2026-11-04; timsurreal to decide if a losing strategy goes public). **Request tracer** (`apps/trace`) live tailnet-only at `:8448`. All three planned demos built. **Public since 2026-11-12** on sslip.io (ADR-012): https://lg.168-110-202-46.sslip.io, https://trace.168-110-202-46.sslip.io, https://trading.168-110-202-46.sslip.io. Stewie (video generator) not started. |
 | 6 Portfolio | 🟡 partly | `README.md`, `docs/ARCHITECTURE.md` (Mermaid diagrams) and `.github/workflows/ci.yml` (terraform fmt/validate, ansible-lint, syntax check, gitleaks) done; checks pass locally/on the edge. **Public on GitHub** (https://github.com/timsurrealedu/oci-homelab, 2026-11-11) after a full-history gitleaks scan; history rewritten first so commits use the GitHub noreply address and the Tailscale policy holds a placeholder login. Live links wait for a domain. |
 
 ## Running right now
@@ -35,7 +35,7 @@ Safety rules (cost $0, never terminate without a backup and timsurreal's yes, no
 Single-server plan (ADR-009): build everything on the edge; don't wait for the worker.
 
 1. ✅ Caddy role done; Prometheus scrapes it.
-2. **Domain** (timsurreal): unlocks Caddy TLS, `status.<domain>`, interactsh and the demos.
+2. **Domain** (timsurreal, on hold 2026-11-12): demos are live on sslip.io meanwhile. A real domain still unlocks branded names, interactsh (NS delegation) and `status.`. A public status page needs a Kuma admin account + status page `homelab` first (timsurreal).
 3. **Demos on the edge, tailnet-first**: ✅ looking glass. ✅ trading dashboard. ✅ request tracer. When the worker arrives, the tracer's worker probe turns green automatically. New apps go in `apps/<name>/` + `apps_enabled` + a Caddy site + a `caddy_tailnet_ports` entry.
 4. **Recon pipeline** once scope files exist; interactsh once the domain exists.
 5. (Done 2026-11-11: restore drill, Ubuntu upgrade, public GitHub repo.)
@@ -84,3 +84,4 @@ Single-server plan (ADR-009): build everything on the edge; don't wait for the w
 - 2026-11-11: Security review (`docs/SECURITY.md`): fixed NAT64 SSRF gap (IPv4-only targets), moved trading off host networking, strict CSP + security headers on demos, disabled rpcbind. Unified retro-gruvbox UI for all demos (ADR-010): Caddy serves static pages + `/ui/`, apps serve `/api/*` only.
 - 2026-11-11: Restore drill passed (backup restored, mounted read-only, configs/vault/trading DB verified, temp volume deleted). Fresh backup, then Ubuntu 20.04 -> 22.04 -> 24.04 in place (ADR-011); fixed rules.v4 rewrite, Prisma OpenSSL 3 engine, Tailscale repo. Going public prepared in code (RUNBOOK "Going public"); smartStudent moved to 127.0.0.1:8097. Cost $0, 4/5 backups.
 - 2026-11-11: Published https://github.com/timsurrealedu/oci-homelab (public, MIT). History rewritten with git-filter-repo (author email -> GitHub noreply, Gmail in `policy.hujson` -> `you@example.com`); the pre-rewrite history is kept only locally as `refs/backup/pre-public-rewrite` (never push it). Repo-local `user.email` is the noreply address.
+- 2026-11-12: Went public on sslip.io (ADR-012), approved by timsurreal for lg, trace and trading (not status). `edge_public_web = true` applied with `-target` (one NSG rule; worker untouched), host_vars `public_domain`/`public_sites` set, Ansible run then a second run `changed=0`. Let's Encrypt certs issued for all three; verified from the public internet (200, valid TLS, lg refuses private targets, admin ports and unapproved `status.` don't answer). README/RUNBOOK updated. Not committed/pushed.

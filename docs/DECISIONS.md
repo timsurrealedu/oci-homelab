@@ -66,3 +66,9 @@ Short ADRs. Newest last.
 **Context.** The edge ran Ubuntu 20.04, past standard support. Rebuilding the only server risks A1 capacity (a terminated instance may not come back) and the data on it.
 **Decision.** Upgrade in place, one LTS at a time, after a verified restore drill and a fresh boot volume backup. Run `do-release-upgrade` as a transient systemd unit so an SSH/Tailscale drop can't kill it. Re-render `rules.v4` from the `firewall` role before each reboot (the upgrade replaced it both times). Now on 24.04 LTS (kernel 7.0 oracle), supported to 2029.
 **Also.** smartStudent moved from Caddy `:80` to `127.0.0.1:8097` so no service answers on port 80 until public sites exist; the firewall template now writes rules in the same form the `iptables` module inserts them, so reboots don't leave duplicates.
+
+## ADR-012: Go public on sslip.io names until a domain exists (2026-11-12)
+
+**Context.** The demos were tailnet-only, so nobody else could click them. timsurreal put the domain purchase on hold but wanted live links now.
+**Decision.** Set `public_domain: 168-110-202-46.sslip.io` (the edge's IP in dashed form; sslip.io resolves `<site>.<that>` to it). Caddy gets Let's Encrypt certs by TLS-ALPN on 443, so no DNS API or account is needed. Only `lg`, `trace` and `trading` are in `public_sites` (each approved by timsurreal); `status` stays off until the Uptime Kuma status page exists. Opened 443 on `nsg-edge` (`edge_public_web = true`, applied with `-target` so the not-yet-launched worker was left alone) and 80/443 in the host firewall.
+**Trade-offs.** The names are tied to the public IP: if the IP ever changes, the links change and the certs re-issue. Free shared domain, so no branding and no control of DNS (interactsh NS delegation still needs a real domain). Reverting is one edit: empty `public_sites`, re-run Ansible, `edge_public_web = false`.

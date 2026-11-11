@@ -1,8 +1,8 @@
 # Inbound on top of the always-on rules (established, icmp, lo, tailscale0).
 # Keep in sync with nsg-edge / the public security list in infra/terraform.
 # Going public: set a domain and list the sites (each one needs timsurreal's yes). See docs/RUNBOOK.md.
-public_domain: ""
-public_sites: []   # lg, trading, trace, status
+public_domain: "168-110-202-46.sslip.io"   # no domain yet: sslip.io resolves <site>.168-110-202-46.sslip.io to the edge IP
+public_sites: [lg, trace, trading]   # approved by timsurreal 2026-11-12; status not yet (needs the Kuma status page)
 firewall_public_tcp: "{{ [22] + ([80, 443] if (public_domain and public_sites) else []) }}"  # SSH always; web only when public
 firewall_allow_from:
   - {src: 10.0.1.0/24, port: 9100}  # worker's Prometheus -> node exporter
