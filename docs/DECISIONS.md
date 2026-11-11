@@ -34,7 +34,7 @@ Short ADRs. Newest last.
 **Context.** The laptop loop stops whenever the lid closes.
 **Decision.** `infra/worker-retry/` runs on the edge as `worker-retry.timer` (every 5 min, root, files in `/opt/oci-homelab/worker-retry/`). It calls `oci compute instance launch` with the same parameters as `oci_core_instance.worker`, authenticated by **instance principal**: dynamic group `oci-homelab-edge` (rule: the edge's instance OCID) plus policy `oci-homelab-worker-launch`, which grants read on instance-family and launch-only (`request.operation = 'LaunchInstance'`) rights on instance, volume and virtual-network families. Telegram (@timsurrealbot, `/etc/oci-homelab/telegram.env`, mode 600) pings on success, on any non-capacity error, daily while it is still trying, and on give-up after 7 days. The timer disables itself on any final outcome.
 **Why.** No personal API key on an internet-facing host, and a compromised edge can't stop, change or delete anything through this policy. The private IP `10.0.1.10` and the 2-OCPU quota make a duplicate worker impossible.
-**After launch.** `terraform import oci_core_instance.worker <ocid>` on the Terraform machine (config already matches; launch-time fields are in `ignore_changes`). Then Tim deletes the policy and the dynamic group (IAM is user-only).
+**After launch.** `terraform import oci_core_instance.worker <ocid>` on the Terraform machine (config already matches; launch-time fields are in `ignore_changes`). Then timsurreal deletes the policy and the dynamic group (IAM is user-only).
 
 ## ADR-007: Host firewall = Oracle's iptables-persistent, managed rule by rule (2026-11-04)
 
@@ -51,7 +51,7 @@ Short ADRs. Newest last.
 ## ADR-009: Build on one server; keep the worker as a bonus (2026-11-11)
 
 **Context.** A week of launch attempts (about 1,800) all hit "Out of host capacity" in ap-batam-1. Waiting blocks every later phase.
-**Decision.** Tim's call: the platform is built on the edge alone. Everything the PRD put on the worker (deploy platform, freqtrade, recon jobs, demo backends) runs on the edge for now. The retry timer keeps going (limit raised to 10,500 attempts, about 5 weeks from 2026-11-04; the ⏳ note is now weekly). The edge stays at 1 OCPU / 6 GB so the worker still fits the free quota if a launch succeeds.
+**Decision.** timsurreal's call: the platform is built on the edge alone. Everything the PRD put on the worker (deploy platform, freqtrade, recon jobs, demo backends) runs on the edge for now. The retry timer keeps going (limit raised to 10,500 attempts, about 5 weeks from 2026-11-04; the ⏳ note is now weekly). The edge stays at 1 OCPU / 6 GB so the worker still fits the free quota if a launch succeeds.
 **If the worker arrives.** Import it (ADR-006), run the Ansible baseline, then move the heavy or risky workloads (recon, stewie rendering, freqtrade) to it by changing inventory groups. Services are written host-agnostic (compose + Ansible roles keyed by groups) so this is a move, not a rewrite.
 **Trade-off.** One box means public traffic and private workloads share a kernel; the NSG, host firewall and localhost/Tailscale-only admin binds carry more of the weight.
 

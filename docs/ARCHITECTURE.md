@@ -1,6 +1,6 @@
 # Architecture
 
-State as of 2026-11-11: one server (**edge**) does everything. A second, private **worker** is declared in Terraform and launches automatically if Oracle frees A1 capacity in Batam (ADR-009).
+State as of 2026-11-11: one server (**edge**) does everything. A second, private **worker** is declared in Terraform and launches automatically if Oracle frees A1 capacity (ADR-009).
 
 ## Network
 
@@ -35,7 +35,7 @@ flowchart TB
 | Host | iptables, rule by rule, Oracle's `InstanceServices` chain kept (ADR-007) | Ansible `firewall` role, `inventory/host_vars/*.yml` |
 | Admin access | Tailscale only: Serve for web UIs, SSH over the tailnet; ACL draft in `infra/tailscale/policy.hujson` | Ansible `tailscale` role |
 
-From the internet, only SSH answers today. Port 80/443 open publicly when Caddy and a domain arrive (Phase 3/5), each behind Tim's yes.
+From the internet, only SSH answers today. Port 80/443 open publicly when Caddy and a domain arrive (Phase 3/5), each behind timsurreal's yes.
 
 ## What runs on the edge
 

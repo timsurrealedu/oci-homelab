@@ -103,10 +103,10 @@ Backups first:
 - Boot volume backup `newLifeOS-pre-phase1-2026-11-04` (FULL, AVAILABLE, 28 GB unique).
 - Off-box at `C:\Users\timsurreal\Backups\oci-homelab\2026-11-04\`: `app-data.tgz` (2.4 GB, gzip-verified: lifeOS, noema, readChinese, Obsidian Vault, aiTrading, smartStudent, stewie, pegilagiMarketing, backups, Syncthing state; build dirs excluded) and `system-config.tgz` (nginx, sshd_config, iptables rules, pm2 dump, Jupyter config, crontab, Tailscale serve JSON, systemd units). `~/mycode` (7 GB) is only in the boot volume backup.
 
-Then, per Tim's checkpoint answers:
+Then, per timsurreal's checkpoint answers:
 - pm2 `lifeOS`, `lifeOS-editor` (= **ttyd** :7681), `lifeOS-playground` (= **JupyterLab** :8888), `noema`, `noema-worker` deleted; `pm2 save`. Folders stay on disk. **Do not delete `~/noema`**: `readchinese` runs on `~/noema/.node-v24.14.0`. To bring back ttyd/Jupyter: re-add from the pm2 dump in `system-config.tgz`, bound to the Tailscale IP.
 - Tailscale Funnel on :8443 turned off; :8443 → nginx (smartStudent) is now tailnet-only. Serve routes :443 (lifeOS) and :8444 (noema) removed. Public relay check for the Funnel URL now times out.
-- Orphan boot volume `lifeos-a1 (Boot Volume)`: backed up as `lifeos-a1-orphan-final-2026-11-04`, then deleted (Tim's yes in chat).
+- Orphan boot volume `lifeos-a1 (Boot Volume)`: backed up as `lifeos-a1-orphan-final-2026-11-04`, then deleted (timsurreal's yes in chat).
 - `readchinese` (200 on :3108) and `smartstudent` (200 on /health) checked after the changes. RAM used dropped from ~1.15 GB to ~0.9 GB.
 
 ## Changes made in Phase 1 (2026-11-04)

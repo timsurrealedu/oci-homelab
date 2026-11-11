@@ -1,8 +1,8 @@
 # oci-homelab
 
-Infrastructure for Tim's Oracle Cloud Always Free servers (ap-batam-1): an edge VM and a private worker VM, built with Terraform and Ansible, aiming at a $0 platform with monitoring, deploys, bug bounty recon, public demos and a portfolio repo.
+Infrastructure for timsurreal's Oracle Cloud Always Free servers (ap-batam-1): an edge VM and a private worker VM, built with Terraform and Ansible, aiming at a $0 platform with monitoring, deploys, bug bounty recon, public demos and a portfolio repo.
 
-**Start here:** `docs/STATUS.md`. It covers the current state, what's running, the next steps and what's waiting on Tim. Update it at the end of every session.
+**Start here:** `docs/STATUS.md`. It covers the current state, what's running, the next steps and what's waiting on timsurreal. Update it at the end of every session.
 
 - Goals and phases: `PRD.md`. Load the `oci-homelab` skill before any OCI action: it has the account facts, the $0 / no-terminate safety rules and the tool map.
 - How-to (Ansible runs, retry timer, monitoring URLs): `docs/RUNBOOK.md`. Why things are the way they are: `docs/DECISIONS.md`. Resource OCIDs: `docs/inventory-2026-11.md`.

@@ -1,6 +1,6 @@
 ---
 name: oci-homelab
-description: Runbook for building and operating Tim's Oracle Cloud (OCI) Always Free homelab in ap-batam-1 - A1 Flex compute, VCN/subnets, Tailscale, Docker/Coolify/Caddy, Terraform. Use before any OCI action (inspect, launch, resize, network change, terminate), when the oci-* MCP tools or the oci CLI are involved, or when deploying services onto the Oracle servers.
+description: Runbook for building and operating timsurreal's Oracle Cloud (OCI) Always Free homelab in ap-batam-1 - A1 Flex compute, VCN/subnets, Tailscale, Docker/Coolify/Caddy, Terraform. Use before any OCI action (inspect, launch, resize, network change, terminate), when the oci-* MCP tools or the oci CLI are involved, or when deploying services onto the Oracle servers.
 ---
 
 # OCI homelab runbook
@@ -63,7 +63,7 @@ Read `PRD.md` in this project for the goals. This file holds the facts and rules
 VCN 10.0.0.0/16 (reuse/import existing VCN; current subnet is 10.0.0.0/24)
 ├─ public subnet  10.0.1.0/24  → edge   (1 OCPU/6 GB, public IP)  Caddy, demos, interactsh, Tailscale subnet router, NAT for worker
 └─ private subnet 10.0.2.0/24  → worker (1 OCPU/6 GB, no public IP) stewie, freqtrade, recon jobs, Postgres
-Tailscale overlay: edge, worker, Windows/Arch laptops, phone. Tailscale ACLs restrict admin ports to Tim's devices.
+Tailscale overlay: edge, worker, Windows/Arch laptops, phone. Tailscale ACLs restrict admin ports to timsurreal's devices.
 ```
 
 Keep the existing subnet CIDR if renumbering would force recreating the instance's VNIC; adapt the plan rather than breaking the running box. If OCI's managed NAT gateway is unavailable on the account, route the worker's egress through the edge (iptables MASQUERADE + route table entry pointing at the edge's private IP with source/dest check disabled on its VNIC).

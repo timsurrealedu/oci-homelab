@@ -6,7 +6,7 @@
 		"group:admins": ["you@example.com"],
 	},
 
-	// Servers are tagged, so they stop being "Tim's devices" and lose access to them.
+	// Servers are tagged, so they stop being "timsurreal's devices" and lose access to them.
 	// After applying: admin console → Machines → instance-20260702-1842 → Edit ACL tags → tag:edge
 	// (worker: tag:worker, or join it with a tag:worker auth key). Tagging also disables key expiry.
 	"tagOwners": {
@@ -22,12 +22,12 @@
 	},
 
 	"acls": [
-		// Tim's own devices (laptops, phone) reach each other and every server port: admin UIs
+		// timsurreal's own devices (laptops, phone) reach each other and every server port: admin UIs
 		// (Coolify, Grafana, Syncthing GUI, Jupyter...) are only reachable this way.
 		{"action": "accept", "src": ["group:admins"], "dst": ["group:admins:*", "tag:edge:*", "tag:worker:*", "tag:render:*"]},
 		// The VCN through the edge's subnet route (worker private IP, OCI metadata stays unreachable).
 		{"action": "accept", "src": ["group:admins"], "dst": ["10.0.0.0/16:*"]},
-		// Exit node on the edge (browse from Batam).
+		// Exit node on the edge (browse from the Oracle server).
 		{"action": "accept", "src": ["group:admins"], "dst": ["autogroup:internet:*"]},
 
 		// Edge → worker: Ansible SSH, Caddy → app proxy, metrics. Mirrors nsg-worker.

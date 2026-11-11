@@ -27,7 +27,7 @@ Scope: the three demos (`apps/lg`, `apps/trading`, `apps/trace`), Caddy, the hos
 
 ### Accepted / follow-ups
 
-- Prometheus and Alertmanager UIs have no login; they're tailnet-only. Applying the Tailscale ACL (`infra/tailscale/policy.hujson`, Tim's step) limits who on the tailnet reaches them.
+- Prometheus and Alertmanager UIs have no login; they're tailnet-only. Applying the Tailscale ACL (`infra/tailscale/policy.hujson`, timsurreal's step) limits who on the tailnet reaches them.
 - smartStudent's backend (`0.0.0.0:3001`) and readChinese (`*:3108`) bind all interfaces; the host firewall blocks them. Binding them to 127.0.0.1 is a change in those apps.
 - GitHub Actions are pinned by tag, not commit SHA. Pin by SHA before accepting outside contributions.
 - When demos go public: strip `Tailscale-User-*` request headers on public sites (only cosmetic for the tracer today), and add `trusted_proxies` if Cloudflare proxying is turned on.

@@ -22,7 +22,7 @@ PROBES = [
     ("internet", "Edge to the internet", "1.1.1.1", 443,
      "Out of the public subnet through Oracle's Internet Gateway (route 0.0.0.0/0 -> IGW). TCP handshake to Cloudflare."),
     ("github", "Edge to GitHub", "github.com", 443,
-     "Same path, plus a DNS lookup through the VCN resolver. Shows the distance from Batam to a big cloud region."),
+     "Same path, plus a DNS lookup through the VCN resolver. Shows the distance from the Oracle server to a big cloud region."),
     ("worker", "Edge to the private worker", "10.0.1.10", 22,
      "Across the VCN into the private subnet. nsg-worker only accepts traffic from members of nsg-edge."),
 ]
@@ -42,7 +42,7 @@ def run_probes(connect=tcp_connect_ms) -> list[dict]:
         try:
             out.append({"id": pid, "label": label, "target": f"{host}:{port}", "ok": True, "ms": connect(host, port), "why": why})
         except OSError as e:
-            note = "no answer: the worker hasn't launched yet (Oracle has no free ARM capacity in Batam)" \
+            note = "no answer: the worker hasn't launched yet (Oracle has no free ARM capacity in this region)" \
                 if pid == "worker" else f"failed: {type(e).__name__}"
             out.append({"id": pid, "label": label, "target": f"{host}:{port}", "ok": False, "ms": None, "why": why, "note": note})
     return out
