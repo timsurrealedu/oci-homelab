@@ -1,0 +1,78 @@
+# Bug bounty program discovery (PRD Phase 4, stage 1): a daily scout that proposes
+# candidates over Telegram, and a listener that turns your tap into a scope file.
+# Neither ever starts a scan -- that's the recon worker (not written yet; see
+# recon/README.md and docs/STATUS.md).
+- name: Create recon system user
+  ansible.builtin.user:
+    name: recon
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+
+- name: Recon directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: recon
+    group: recon
+    mode: "0750"
+  loop:
+    - "{{ recon_dir }}"
+    - "{{ recon_dir }}/scope"
+    - /etc/oci-homelab/secrets
+
+- name: Copy recon sources
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../recon/"
+    dest: "{{ recon_dir }}/"
+    owner: recon
+    group: recon
+    mode: "0640"
+    directory_mode: "0750"
+  notify: Restart recon services
+
+- name: Scripts stay executable by the recon user
+  ansible.builtin.file:
+    path: "{{ recon_dir }}/{{ item }}"
+    mode: "0750"
+  loop: [scout.py, approval_bridge.py]
+
+- name: Read the shared Telegram bot settings
+  ansible.builtin.slurp:
+    src: /etc/oci-homelab/telegram.env
+  register: recon_telegram_env_raw
+  no_log: true
+
+- name: Write the recon user's own copy of the Telegram secret
+  ansible.builtin.copy:
+    dest: /etc/oci-homelab/secrets/recon-telegram.env
+    content: "{{ recon_telegram_env_raw.content | b64decode }}"
+    owner: recon
+    group: recon
+    mode: "0600"
+  no_log: true
+  notify: Restart recon services
+
+- name: Install the scout systemd service (templated for the ping-limit setting)
+  ansible.builtin.template:
+    src: scout.service.j2
+    dest: /etc/systemd/system/scout.service
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Install the scout timer and approval bridge units
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    mode: "0644"
+  loop: [scout.timer, approval-bridge.service]
+  notify: Reload systemd
+
+- name: Enable the approval bridge (always-on) and the scout timer
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+    daemon_reload: true
+  loop: [approval-bridge.service, scout.timer]
+  ignore_errors: "{{ ansible_check_mode }}"

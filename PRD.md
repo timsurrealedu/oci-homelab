@@ -111,8 +111,9 @@ Each phase ends with: what changed, how it was verified, docs updated. Checkpoin
 
 ### Phase 4: Bug bounty recon platform (G5)
 - Self-hosted **interactsh-server** on `oast.<d>` (NS delegation for the subdomain, ports 53/udp+tcp, HTTP/HTTPS). Resolve the port-80/443 conflict with Caddy (e.g. Caddy routes `*.oast.<d>` to interactsh's HTTP listener, or interactsh gets a dedicated IP-less setup); document the choice.
-- Recon pipeline on the worker: per-program config listing **in-scope** domains only → subfinder → dnsx → httpx (tech/title/status) → store results (SQLite/Postgres) → diff vs previous run → Telegram alert on new hosts/changes. Scheduled (cron/systemd timers). Optional nuclei with conservative templates and rate limits.
-- Guardrails: scope file is required per program; global rate limit; no brute-force/fuzzing by default; logs of what was scanned. Oracle's AUP dislikes aggressive scanning, so keep it gentle.
+- **Stage 1 (built, `recon/`, ADR-013):** a daily scout filters HackerOne's public program list down to structurally promising candidates and pings Telegram with an Approve/Reject tap per candidate. A per-program scope file (the "config listing in-scope domains only" below) is now machine-generated from HackerOne's own scope data, but only once that tap happens — timsurreal still decides which programs get one, same as the original plan, just without hand-writing the file.
+- **Stage 2 / recon worker (not built):** per-program scope file → subfinder → dnsx → httpx (tech/title/status) → store results (SQLite/Postgres) → diff vs previous run → Telegram alert on new hosts/changes. Scheduled (cron/systemd timers). Optional nuclei with conservative (non-destructive) templates and rate limits. Then triage/dedup (via HackerOne's official read-only MCP server) and report drafting.
+- Guardrails: scope file is required per program (now scout-generated, human-approved, not hand-written — ADR-013); global rate limit; no brute-force/fuzzing by default; logs of what was scanned. Oracle's AUP dislikes aggressive scanning, so keep it gentle.
 - Small web view (Tailscale-only) of recent findings.
 
 ### Phase 5: Fun public demos (G6)

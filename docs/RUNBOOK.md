@@ -48,6 +48,16 @@ Errors: "Out of host capacity", TooManyRequests and InternalError retry silently
 - Test the alert path: POST a synthetic alert to `127.0.0.1:9093/api/v2/alerts` (see the Phase 3 notes) and check `alertmanager_notifications_total{integration="telegram"}`.
 - Adding the worker: append `{target: 10.0.1.10:9100, name: worker}` to `monitoring_node_targets`.
 
+## Bug bounty scout (Phase 4, stage 1 — ADR-013)
+
+`recon/README.md` has the design. Operationally, on the edge:
+
+- Check what's queued/decided: `sudo -u recon sqlite3 /opt/oci-homelab/recon/recon.db "SELECT handle, status, pinged FROM programs ORDER BY discovered_at DESC LIMIT 20;"`
+- Approved scope files land in `/opt/oci-homelab/recon/scope/<handle>.json`.
+- Logs: `journalctl -u scout.service` (one run per day, or `systemctl start scout.service` to run it now) and `journalctl -u approval-bridge.service -f` (always running; should show nothing until you tap a button).
+- Telegram goes quiet between runs by design — pings are rate-limited to `SCOUT_MAX_PINGS` (default 10) per run specifically so the backlog doesn't flood you; `recon_scout_max_pings_per_run` in `infra/ansible/roles/recon/defaults/main.yml` controls it.
+- A program only gets a scope file once you tap Approve on its Telegram message — nothing is scanned before that (Phase B, the actual recon worker, isn't built yet anyway).
+
 ## Going public
 
 **Live since 2026-11-12 on sslip.io names (ADR-012):** `lg.`, `trace.`, `trading.168-110-202-46.sslip.io` (`public_domain` / `public_sites` in `host_vars/edge.yml`, `edge_public_web = true` in the git-ignored `terraform.tfvars`). When a real domain arrives, change `public_domain`, point the A records at the edge IP and re-run Ansible; the sslip.io certs stop being used. Targeted Terraform applies (`-target`) keep the pending worker from launching as a side effect.

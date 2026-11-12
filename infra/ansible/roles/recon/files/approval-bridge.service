@@ -1,0 +1,21 @@
+[Unit]
+Description=oci-homelab: Telegram approve/reject listener for bug bounty candidates
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=recon
+WorkingDirectory=/opt/oci-homelab/recon
+Environment=TELEGRAM_ENV=/etc/oci-homelab/secrets/recon-telegram.env
+Environment=RECON_DB=/opt/oci-homelab/recon/recon.db
+ExecStart=/usr/bin/python3 /opt/oci-homelab/recon/approval_bridge.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/oci-homelab/recon
+
+[Install]
+WantedBy=multi-user.target

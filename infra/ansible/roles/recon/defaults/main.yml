@@ -1,0 +1,6 @@
+recon_dir: /opt/oci-homelab/recon
+# Reuses the shared bot that Alertmanager already pings (/etc/oci-homelab/telegram.env,
+# a manually-placed secret -- see docs/RUNBOOK.md). This role writes its own
+# recon-owned copy rather than reading the shared file directly, same pattern
+# as roles/monitoring.
+recon_scout_max_pings_per_run: 10

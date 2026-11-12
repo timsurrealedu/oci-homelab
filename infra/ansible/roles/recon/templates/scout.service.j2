@@ -1,0 +1,17 @@
+[Unit]
+Description=oci-homelab: bug bounty program discovery (stage 1 filter + Telegram proposal)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=recon
+WorkingDirectory={{ recon_dir }}
+Environment=TELEGRAM_ENV=/etc/oci-homelab/secrets/recon-telegram.env
+Environment=RECON_DB={{ recon_dir }}/recon.db
+Environment=SCOUT_MAX_PINGS={{ recon_scout_max_pings_per_run }}
+ExecStart=/usr/bin/python3 {{ recon_dir }}/scout.py
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ recon_dir }}

@@ -1,0 +1,9 @@
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart recon services
+  ansible.builtin.systemd:
+    name: approval-bridge.service
+    state: restarted
+  # scout.service is a oneshot triggered by its timer; nothing persistent to restart.

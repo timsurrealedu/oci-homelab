@@ -18,3 +18,10 @@
   roles:
     - apps
     - caddy
+
+# Single-server plan (ADR-009): runs on edge_hosts for now. Move to worker_hosts
+# by changing this line once the worker exists (docs/STATUS.md "Next steps").
+- name: Bug bounty program discovery (stage 1 + Telegram approval)
+  hosts: edge_hosts
+  roles:
+    - recon
